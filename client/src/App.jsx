@@ -3,6 +3,7 @@ import {
   MapPin, Calendar, User, MessageCircle, Plus, Search,
   Navigation, Bus, Train, Car, Plane, Send, X, LogIn, LogOut, ChevronRight, Mail, Lock
 } from 'lucide-react';
+import { io } from "socket.io-client";
 
 const API_BASE = 'http://localhost:3000/api';
 
@@ -14,11 +15,15 @@ export default function App() {
   });
   const [token, setToken] = useState(() => localStorage.getItem('travel_token'));
 
-  const [view, setView] = useState('home'); // home, post, chat
+  const [view, setView] = useState('home'); // home, post, chat, profile
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeTrip, setActiveTrip] = useState(null);
-  const [messages, setMessages] = useState({});
+
+  // Chat & Profile State
+  const [activeChat, setActiveChat] = useState(null); // { type: 'group'|'private', id: string, name: string, data: any }
+  const [activeProfile, setActiveProfile] = useState(null); // user object for profile view
+  const [messages, setMessages] = useState({}); // { [chatId]: [msg...]}
+  const [socket, setSocket] = useState(null);
 
   // --- API HELPERS ---
   const apiFetch = async (endpoint, options = {}) => {
@@ -37,6 +42,43 @@ export default function App() {
   };
 
   // --- EFFECTS ---
+  useEffect(() => {
+    if (user) {
+      // Connect to Socket
+      // Assuming server runs on different port or same host?
+      // Based on server setup, it listens on 5000. Client proxy might handle /api, but socket needs direct port if not proxied.
+      // We will try connecting to the same host but port 5000 if running locally, or infer.
+      // For this environment, let's hardcode the port 3000 if we assumed that before, or 5000.
+      // The user request implies working system. I will guess http://localhost:5000 based on server app.js default.
+      const newSocket = io("http://localhost:3000");
+
+      setSocket(newSocket);
+
+      newSocket.on('connect', () => {
+        console.log("Connected to socket");
+        newSocket.emit('join_private', user.id);
+      });
+
+      newSocket.on('receive_trip_message', (data) => {
+        setMessages(prev => ({
+          ...prev,
+          [data.tripId]: [...(prev[data.tripId] || []), data]
+        }));
+      });
+
+      newSocket.on('receive_private_message', (data) => {
+        // data has senderId. Store under senderId.
+        const partnerId = data.senderId;
+        setMessages(prev => ({
+          ...prev,
+          [partnerId]: [...(prev[partnerId] || []), data]
+        }));
+      });
+
+      return () => newSocket.close();
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user && view === 'home') {
       loadTrips();
@@ -76,6 +118,7 @@ export default function App() {
     localStorage.removeItem('travel_user');
     localStorage.removeItem('travel_token');
     setView('home');
+    if (socket) socket.close();
   };
 
   const handlePostTrip = async (tripData) => {
@@ -92,6 +135,48 @@ export default function App() {
     }
   };
 
+  const startGroupChat = (trip) => {
+    setActiveChat({ type: 'group', id: trip.id, name: `${trip.origin} to ${trip.destination}`, data: trip });
+    socket.emit('join_trip', trip.id);
+    setView('chat');
+  };
+
+  const startPrivateChat = (targetUser) => {
+    setActiveChat({ type: 'private', id: targetUser.id, name: targetUser.name, data: targetUser });
+    setView('chat');
+  };
+
+  const handleSendMessage = (text) => {
+    if (!text.trim()) return;
+
+    const timestamp = new Date().toISOString();
+    const msgData = {
+      text,
+      senderId: user.id,
+      senderName: user.name,
+      timestamp,
+      id: Date.now()
+    };
+
+    if (activeChat.type === 'group') {
+      socket.emit('send_trip_message', { ...msgData, tripId: activeChat.id });
+      // Group: we wait for server broadcast to add to list (so we don't duplicate)
+    } else {
+      socket.emit('send_private_message', { ...msgData, toUserId: activeChat.id });
+      // Private: server does NOT echo back to sender usually (unless we programmed it to), so we add locally
+      setMessages(prev => ({
+        ...prev,
+        [activeChat.id]: [...(prev[activeChat.id] || []), msgData]
+      }));
+    }
+  };
+
+  const openProfile = (targetUser) => {
+    if (targetUser.id === user.id) return; // Don't view own profile (or maybe yes?)
+    setActiveProfile(targetUser);
+    setView('profile');
+  };
+
   // --- RENDER ---
   if (!user) {
     return <AuthScreen onAuth={handleAuth} />;
@@ -106,7 +191,8 @@ export default function App() {
           trips={trips}
           loading={loading}
           onPostClick={() => setView('post')}
-          onConnect={(trip) => { setActiveTrip(trip); setView('chat'); }}
+          onConnect={startGroupChat}
+          onViewProfile={(hostId, hostName) => openProfile({ id: hostId, name: hostName })}
           user={user}
         />
       )}
@@ -118,15 +204,20 @@ export default function App() {
         />
       )}
 
-      {view === 'chat' && activeTrip && (
+      {view === 'profile' && activeProfile && (
+        <ProfileView
+          user={activeProfile}
+          onBack={() => setView('home')} // Or back to last view? Home for now.
+          onMessage={() => startPrivateChat(activeProfile)}
+        />
+      )}
+
+      {view === 'chat' && activeChat && (
         <ChatView
-          trip={activeTrip}
+          chat={activeChat}
           user={user}
-          messages={messages[activeTrip.id] || []}
-          onSend={(text) => {
-            const newMsg = { id: Date.now(), text, senderId: user.id, senderName: user.name };
-            setMessages(prev => ({ ...prev, [activeTrip.id]: [...(prev[activeTrip.id] || []), newMsg] }));
-          }}
+          messages={messages[activeChat.id] || []}
+          onSend={handleSendMessage}
           onBack={() => setView('home')}
         />
       )}
@@ -258,7 +349,7 @@ const Header = ({ user, setView, onLogout }) => (
   </header>
 );
 
-const HomeView = ({ trips, loading, onPostClick, onConnect, user }) => (
+const HomeView = ({ trips, loading, onPostClick, onConnect, onViewProfile, user }) => (
   <>
     <div className="hero-section">
       <div className="container text-center">
@@ -308,7 +399,13 @@ const HomeView = ({ trips, loading, onPostClick, onConnect, user }) => (
       ) : (
         <div className="cards-grid">
           {trips.map(trip => (
-            <TripCard key={trip.id} trip={trip} onConnect={onConnect} isOwner={trip.hostId === user.id} />
+            <TripCard
+              key={trip.id}
+              trip={trip}
+              onConnect={onConnect}
+              onViewProfile={onViewProfile}
+              isOwner={trip.hostId === user.id}
+            />
           ))}
         </div>
       )}
@@ -320,7 +417,7 @@ const HomeView = ({ trips, loading, onPostClick, onConnect, user }) => (
   </>
 );
 
-const TripCard = ({ trip, onConnect, isOwner }) => {
+const TripCard = ({ trip, onConnect, onViewProfile, isOwner }) => {
   const ModeIcon = {
     'Bus': Bus, 'Train': Train, 'Car/Cab': Car, 'Flight': Plane, 'Bike': Navigation
   }[trip.mode] || Bus;
@@ -331,12 +428,15 @@ const TripCard = ({ trip, onConnect, isOwner }) => {
     <div className="trip-card">
       <div style={{ padding: '1.25rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <div
+            style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', cursor: 'pointer' }}
+            onClick={() => onViewProfile(trip.hostId, trip.hostName)}
+          >
             <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', background: trip.avatarColor || '#e2e8f0', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
               {trip.hostName?.[0]}
             </div>
             <div>
-              <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{trip.hostName}</div>
+              <div style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--primary)' }}>{trip.hostName}</div>
               <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Host</div>
             </div>
           </div>
@@ -347,13 +447,11 @@ const TripCard = ({ trip, onConnect, isOwner }) => {
 
         <div style={{ position: 'relative', paddingLeft: '1rem', marginBottom: '1rem' }}>
           <div style={{ position: 'absolute', left: 0, top: '0.5rem', bottom: '0.5rem', width: '2px', background: '#e2e8f0', borderLeft: '2px dashed #cbd5e1' }}></div>
-
           <div style={{ marginBottom: '1rem', position: 'relative' }}>
             <div style={{ position: 'absolute', left: '-1.35rem', width: '0.75rem', height: '0.75rem', borderRadius: '50%', background: '#fff', border: '2px solid var(--primary)' }}></div>
             <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>From</div>
             <div style={{ fontWeight: '600' }}>{trip.origin}</div>
           </div>
-
           <div style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', left: '-1.35rem', width: '0.75rem', height: '0.75rem', borderRadius: '50%', background: '#fff', border: '2px solid var(--secondary)' }}></div>
             <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>To</div>
@@ -371,7 +469,7 @@ const TripCard = ({ trip, onConnect, isOwner }) => {
           onClick={() => onConnect(trip)}
           className={`btn w-full ${isOwner ? 'btn-secondary' : 'btn-primary'}`}
         >
-          <MessageCircle size={16} /> {isOwner ? 'View Chat' : 'Connect'}
+          <MessageCircle size={16} /> {isOwner ? 'Group Chat' : 'Join Group Chat'}
         </button>
       </div>
     </div>
@@ -429,25 +527,51 @@ const PostTripView = ({ onCancel, onSubmit }) => {
   );
 };
 
-const ChatView = ({ trip, user, messages, onSend, onBack }) => {
+const ProfileView = ({ user, onBack, onMessage }) => (
+  <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '0 1rem' }}>
+    <button onClick={onBack} className="btn btn-ghost" style={{ marginBottom: '1rem', paddingLeft: 0 }}>
+      <ChevronRight size={16} style={{ transform: 'rotate(180deg)' }} /> Back
+    </button>
+    <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+      <div style={{ width: '6rem', height: '6rem', borderRadius: '50%', background: '#dbeafe', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+        {user.name?.[0]}
+      </div>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>{user.name}</h2>
+      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Travel Enthusiast</p>
+
+      <button onClick={onMessage} className="btn btn-primary w-full">
+        <MessageCircle size={18} /> Message
+      </button>
+    </div>
+  </div>
+);
+
+const ChatView = ({ chat, user, messages, onSend, onBack }) => {
   const [text, setText] = useState('');
   const endRef = useRef(null);
 
   useEffect(() => endRef.current?.scrollIntoView(), [messages]);
+
+  const isGroup = chat.type === 'group';
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'white', zIndex: 100, display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <button onClick={onBack} className="btn btn-ghost" style={{ borderRadius: '50%', padding: '0.5rem' }}><ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} /></button>
         <div>
-          <div style={{ fontWeight: 'bold' }}>{trip.origin} to {trip.destination}</div>
-          <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Host: {trip.hostName}</div>
+          <div style={{ fontWeight: 'bold' }}>{chat.name}</div>
+          <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
+            {isGroup ? `Host: ${chat.data.hostName}` : 'Private Conversation'}
+          </div>
         </div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', background: '#f8fafc' }}>
         {messages.map((m) => (
           <div key={m.id} style={{ alignSelf: m.senderId === user.id ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
+            {isGroup && m.senderId !== user.id && (
+              <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.1rem', marginLeft: '0.5rem' }}>{m.senderName}</div>
+            )}
             <div style={{
               padding: '0.5rem 1rem',
               borderRadius: '1rem',
