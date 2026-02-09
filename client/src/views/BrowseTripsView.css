@@ -1,0 +1,30 @@
+.browse-trips-view {
+    background: white;
+    min-height: 100vh;
+}
+
+.browse-filter-bar {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 0;
+    position: sticky;
+    top: 4rem;
+    /* Below header */
+    z-index: 40;
+}
+
+.browse-container {
+    padding-top: 2rem;
+}
+
+.browse-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.browse-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
