@@ -11,7 +11,18 @@ import ChatView from './views/ChatView';
 import ChatsListView from './views/ChatsListView';
 import './App.css';
 
-const API_BASE = 'http://localhost:3000/api';
+// Use dynamic hostname - works with both localhost and IP address
+const getApiBaseUrl = () => {
+  const hostname = window.location.hostname;
+  return `http://${hostname}:3000/api`;
+};
+
+const getSocketUrl = () => {
+  const hostname = window.location.hostname;
+  return `http://${hostname}:3000`;
+};
+
+const API_BASE = getApiBaseUrl();
 
 export default function App() {
   // State
@@ -50,7 +61,7 @@ export default function App() {
   // --- EFFECTS ---
   useEffect(() => {
     if (user) {
-      const newSocket = io("http://localhost:3000");
+      const newSocket = io(getSocketUrl());
       setSocket(newSocket);
 
       newSocket.on('connect', () => {
