@@ -145,16 +145,44 @@ function AppContent() {
     }
   };
 
-  const startGroupChat = (trip) => {
+  const loadGroupMessages = async (tripId) => {
+    try {
+      const data = await apiFetch(`/messages/group/${tripId}`);
+      setMessages(prev => ({
+        ...prev,
+        [tripId]: data
+      }));
+    } catch (error) {
+      console.error('Error loading group messages:', error);
+    }
+  };
+
+  const loadPrivateMessages = async (userId1, userId2) => {
+    try {
+      const data = await apiFetch(`/messages/private/${userId1}/${userId2}`);
+      setMessages(prev => ({
+        ...prev,
+        [userId2]: data
+      }));
+    } catch (error) {
+      console.error('Error loading private messages:', error);
+    }
+  };
+
+  const startGroupChat = async (trip) => {
     setActiveChat({ type: 'group', id: trip.id, name: `${trip.origin} to ${trip.destination}`, data: trip });
     if (socket) {
       socket.emit('join_trip', trip.id);
     }
+    // Load existing messages
+    await loadGroupMessages(trip.id);
     navigate(`/chat/${trip.id}`);
   };
 
-  const startPrivateChat = (targetUser) => {
+  const startPrivateChat = async (targetUser) => {
     setActiveChat({ type: 'private', id: targetUser.id, name: targetUser.name, data: targetUser });
+    // Load existing messages
+    await loadPrivateMessages(user.id, targetUser.id);
     navigate(`/chat/${targetUser.id}`);
   };
 
