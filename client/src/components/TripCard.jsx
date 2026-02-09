@@ -1,13 +1,20 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bus, Train, Car, Plane, Navigation, Calendar, MessageCircle } from 'lucide-react';
 import './TripCard.css';
 
 const TripCard = ({ trip, onConnect, onViewProfile, isOwner }) => {
+    const navigate = useNavigate();
     const ModeIcon = {
         'Bus': Bus, 'Train': Train, 'Car/Cab': Car, 'Flight': Plane, 'Bike': Navigation
     }[trip.mode] || Bus;
 
     const date = new Date(trip.date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+
+    const handleViewProfile = () => {
+        onViewProfile(trip.hostId, trip.hostName);
+        navigate(`/profile/${trip.hostId}`);
+    };
 
     return (
         <div className="trip-card">
@@ -15,7 +22,7 @@ const TripCard = ({ trip, onConnect, onViewProfile, isOwner }) => {
                 <div className="trip-header">
                     <div
                         className="host-info"
-                        onClick={() => onViewProfile(trip.hostId, trip.hostName)}
+                        onClick={handleViewProfile}
                     >
                         <div className="avatar" style={{ background: trip.avatarColor || '#e2e8f0' }}>
                             {trip.hostName?.[0]}

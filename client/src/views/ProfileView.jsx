@@ -7,8 +7,10 @@ const ProfileView = ({ user, onMessage, isOwnProfile, trips = [] }) => {
     const navigate = useNavigate();
 
     const handleMessage = () => {
-        onMessage();
-        navigate('/chat/' + user.id);
+        if (onMessage) {
+            onMessage();
+        }
+        navigate(`/chat/${user.id}`);
     };
 
     // Filter trips created by this user
@@ -30,73 +32,84 @@ const ProfileView = ({ user, onMessage, isOwnProfile, trips = [] }) => {
                 </div>
                 <h2 className="profile-name">{user.name}</h2>
                 <p className="profile-role">Travel Enthusiast</p>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{user.email || ''}</p>
+                {user.email && <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{user.email}</p>}
 
                 {!isOwnProfile && (
                     <button onClick={handleMessage} className="btn btn-primary w-full" style={{ marginTop: '1.5rem' }}>
-                        <MessageCircle size={18} /> Message
+                        <MessageCircle size={18} /> Send Message
                     </button>
                 )}
             </div>
 
-            {isOwnProfile && (
-                <div style={{ marginTop: '2rem' }}>
-                    {/* Created Trips Section */}
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <MapPin size={20} style={{ color: 'var(--primary)' }} />
-                            Trips Created ({createdTrips.length})
-                        </h3>
-                        {createdTrips.length === 0 ? (
-                            <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
-                                You haven't created any trips yet.
-                            </p>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                {createdTrips.map(trip => (
-                                    <div
-                                        key={trip.id}
-                                        style={{
-                                            padding: '1rem',
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: '0.5rem',
-                                            cursor: 'pointer',
-                                            transition: 'background 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                                        onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-                                        onClick={() => navigate('/browse')}
-                                    >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
-                                            <div style={{ fontWeight: '600', fontSize: '1rem' }}>
-                                                {trip.origin} → {trip.destination}
-                                            </div>
-                                            <div style={{
-                                                background: '#f1f5f9',
-                                                padding: '0.25rem 0.5rem',
-                                                borderRadius: '0.25rem',
-                                                fontSize: '0.75rem',
-                                                fontWeight: '500'
-                                            }}>
-                                                {trip.mode}
-                                            </div>
+            <div style={{ marginTop: '2rem' }}>
+                {/* Created Trips Section */}
+                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <MapPin size={20} style={{ color: 'var(--primary)' }} />
+                        {isOwnProfile ? 'Your Trips' : `${user.name}'s Trips`} ({createdTrips.length})
+                    </h3>
+                    {createdTrips.length === 0 ? (
+                        <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
+                            {isOwnProfile ? "You haven't created any trips yet." : `${user.name} hasn't created any trips yet.`}
+                        </p>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {createdTrips.map(trip => (
+                                <div
+                                    key={trip.id}
+                                    style={{
+                                        padding: '1rem',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '0.5rem',
+                                        cursor: 'pointer',
+                                        transition: 'background 0.2s, border-color 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = '#f8fafc';
+                                        e.currentTarget.style.borderColor = '#cbd5e1';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = 'white';
+                                        e.currentTarget.style.borderColor = '#e2e8f0';
+                                    }}
+                                    onClick={() => navigate('/browse')}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
+                                        <div style={{ fontWeight: '600', fontSize: '1rem' }}>
+                                            {trip.origin} → {trip.destination}
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                                            <Calendar size={14} />
-                                            {new Date(trip.date).toLocaleDateString('en-US', {
-                                                weekday: 'short',
-                                                day: 'numeric',
-                                                month: 'short',
-                                                year: 'numeric'
-                                            })}
+                                        <div style={{
+                                            background: '#f1f5f9',
+                                            padding: '0.25rem 0.5rem',
+                                            borderRadius: '0.25rem',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '500'
+                                        }}>
+                                            {trip.mode}
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                                        <Calendar size={14} />
+                                        {new Date(trip.date).toLocaleDateString('en-US', {
+                                            weekday: 'short',
+                                            day: 'numeric',
+                                            month: 'short',
+                                            year: 'numeric'
+                                        })}
+                                    </div>
+                                    {trip.description && (
+                                        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#64748b' }}>
+                                            {trip.description}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
-                    {/* Joined Trips Section */}
+                {/* Only show Joined Trips for own profile */}
+                {isOwnProfile && (
                     <div style={{ background: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
                         <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <MessageCircle size={20} style={{ color: 'var(--secondary)' }} />
@@ -130,8 +143,8 @@ const ProfileView = ({ user, onMessage, isOwnProfile, trips = [] }) => {
                             </div>
                         )}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };

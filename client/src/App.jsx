@@ -8,6 +8,7 @@ import BrowseTripsView from './views/BrowseTripsView';
 import PostTripView from './views/PostTripView';
 import ProfileView from './views/ProfileView';
 import ChatView from './views/ChatView';
+import ChatsListView from './views/ChatsListView';
 import './App.css';
 
 const API_BASE = 'http://localhost:3000/api';
@@ -162,9 +163,9 @@ export default function App() {
     }
   };
 
-  const openProfile = (targetUser) => {
-    if (targetUser.id === user.id) return;
-    setActiveProfile(targetUser);
+  const openProfile = (hostId, hostName) => {
+    if (hostId === user.id) return;
+    setActiveProfile({ id: hostId, name: hostName });
   };
 
   // --- RENDER ---
@@ -243,6 +244,23 @@ export default function App() {
           />
 
           <Route
+            path="/chats"
+            element={
+              <ChatsListView
+                messages={messages}
+                user={user}
+                onOpenChat={(chat) => {
+                  if (chat.type === 'group') {
+                    setActiveChat({ type: 'group', id: chat.id, name: chat.name });
+                  } else {
+                    setActiveChat({ type: 'private', id: chat.id, name: chat.name });
+                  }
+                }}
+              />
+            }
+          />
+
+          <Route
             path="/chat/:chatId"
             element={
               activeChat ? (
@@ -253,7 +271,7 @@ export default function App() {
                   onSend={handleSendMessage}
                 />
               ) : (
-                <Navigate to="/" replace />
+                <Navigate to="/chats" replace />
               )
             }
           />

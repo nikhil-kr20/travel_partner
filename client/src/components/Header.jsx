@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Navigation, LogOut, User } from 'lucide-react';
+import { Navigation, LogOut, User, MessageSquare } from 'lucide-react';
 import './Header.css';
 
 const Header = ({ user, onLogout }) => {
@@ -40,6 +40,21 @@ const Header = ({ user, onLogout }) => {
                         }}
                     >
                         Post Trip
+                    </button>
+                    <button
+                        onClick={() => navigate('/chats')}
+                        className="btn btn-ghost"
+                        style={{
+                            fontWeight: 600,
+                            color: location.pathname === '/chats' || location.pathname.startsWith('/chat/') ? 'var(--primary)' : 'var(--text-main)',
+                            borderBottom: location.pathname === '/chats' || location.pathname.startsWith('/chat/') ? '2px solid var(--primary)' : 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                        }}
+                    >
+                        <MessageSquare size={18} />
+                        Chats
                     </button>
                 </div>
 
