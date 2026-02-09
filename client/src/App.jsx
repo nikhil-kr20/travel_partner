@@ -11,16 +11,8 @@ import ChatView from './views/ChatView';
 import ChatsListView from './views/ChatsListView';
 import './App.css';
 
-// Use dynamic hostname - works with both localhost and IP address
-const getApiBaseUrl = () => {
-  const hostname = window.location.hostname;
-  return `http://${hostname}:3000/api`;
-};
-
-const getSocketUrl = () => {
-  const hostname = window.location.hostname;
-  return `http://${hostname}:3000`;
-};
+// Import API configuration
+import { getApiBaseUrl, getSocketUrl } from './config/api';
 
 const API_BASE = getApiBaseUrl();
 
