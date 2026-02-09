@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { io } from "socket.io-client";
 import Header from './components/Header';
 import AuthScreen from './views/AuthScreen';
@@ -24,7 +24,9 @@ const getSocketUrl = () => {
 
 const API_BASE = getApiBaseUrl();
 
-export default function App() {
+function AppContent() {
+  const navigate = useNavigate();
+
   // State
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('travel_user');
@@ -127,6 +129,7 @@ export default function App() {
     localStorage.removeItem('travel_user');
     localStorage.removeItem('travel_token');
     if (socket) socket.close();
+    navigate('/');
   };
 
   const handlePostTrip = async (tripData) => {
@@ -144,11 +147,15 @@ export default function App() {
 
   const startGroupChat = (trip) => {
     setActiveChat({ type: 'group', id: trip.id, name: `${trip.origin} to ${trip.destination}`, data: trip });
-    socket.emit('join_trip', trip.id);
+    if (socket) {
+      socket.emit('join_trip', trip.id);
+    }
+    navigate(`/chat/${trip.id}`);
   };
 
   const startPrivateChat = (targetUser) => {
     setActiveChat({ type: 'private', id: targetUser.id, name: targetUser.name, data: targetUser });
+    navigate(`/chat/${targetUser.id}`);
   };
 
   const handleSendMessage = (text) => {
@@ -185,111 +192,117 @@ export default function App() {
   }
 
   return (
-    <Router>
-      <div className="app-container">
-        <Header user={user} onLogout={handleLogout} />
+    <div className="app-container">
+      <Header user={user} onLogout={handleLogout} />
 
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <HomeView
-                trips={trips}
-                loading={loading}
-                onConnect={startGroupChat}
-                onViewProfile={openProfile}
-                user={user}
-              />
-            }
-          />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <HomeView
+              trips={trips}
+              loading={loading}
+              onConnect={startGroupChat}
+              onViewProfile={openProfile}
+              user={user}
+            />
+          }
+        />
 
-          <Route
-            path="/browse"
-            element={
-              <BrowseTripsView
-                trips={trips}
-                initialFilters={searchFilters}
-                loading={loading}
-                onConnect={startGroupChat}
-                onViewProfile={openProfile}
-                user={user}
-              />
-            }
-          />
+        <Route
+          path="/browse"
+          element={
+            <BrowseTripsView
+              trips={trips}
+              initialFilters={searchFilters}
+              loading={loading}
+              onConnect={startGroupChat}
+              onViewProfile={openProfile}
+              user={user}
+            />
+          }
+        />
 
-          <Route
-            path="/post"
-            element={
-              <PostTripView
-                onSubmit={handlePostTrip}
-              />
-            }
-          />
+        <Route
+          path="/post"
+          element={
+            <PostTripView
+              onSubmit={handlePostTrip}
+            />
+          }
+        />
 
-          <Route
-            path="/profile"
-            element={
+        <Route
+          path="/profile"
+          element={
+            <ProfileView
+              user={user}
+              onMessage={() => { }}
+              isOwnProfile={true}
+              trips={trips}
+            />
+          }
+        />
+
+        <Route
+          path="/profile/:userId"
+          element={
+            activeProfile ? (
               <ProfileView
-                user={user}
-                onMessage={() => { }}
-                isOwnProfile={true}
+                user={activeProfile}
+                onMessage={() => startPrivateChat(activeProfile)}
+                isOwnProfile={false}
                 trips={trips}
               />
-            }
-          />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
 
-          <Route
-            path="/profile/:userId"
-            element={
-              activeProfile ? (
-                <ProfileView
-                  user={activeProfile}
-                  onMessage={() => startPrivateChat(activeProfile)}
-                  isOwnProfile={false}
-                  trips={trips}
-                />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
+        <Route
+          path="/chats"
+          element={
+            <ChatsListView
+              messages={messages}
+              user={user}
+              onOpenChat={(chat) => {
+                if (chat.type === 'group') {
+                  setActiveChat({ type: 'group', id: chat.id, name: chat.name });
+                } else {
+                  setActiveChat({ type: 'private', id: chat.id, name: chat.name });
+                }
+              }}
+            />
+          }
+        />
 
-          <Route
-            path="/chats"
-            element={
-              <ChatsListView
-                messages={messages}
+        <Route
+          path="/chat/:chatId"
+          element={
+            activeChat ? (
+              <ChatView
+                chat={activeChat}
                 user={user}
-                onOpenChat={(chat) => {
-                  if (chat.type === 'group') {
-                    setActiveChat({ type: 'group', id: chat.id, name: chat.name });
-                  } else {
-                    setActiveChat({ type: 'private', id: chat.id, name: chat.name });
-                  }
-                }}
+                messages={messages[activeChat.id] || []}
+                onSend={handleSendMessage}
               />
-            }
-          />
+            ) : (
+              <Navigate to="/chats" replace />
+            )
+          }
+        />
 
-          <Route
-            path="/chat/:chatId"
-            element={
-              activeChat ? (
-                <ChatView
-                  chat={activeChat}
-                  user={user}
-                  messages={messages[activeChat.id] || []}
-                  onSend={handleSendMessage}
-                />
-              ) : (
-                <Navigate to="/chats" replace />
-              )
-            }
-          />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </div>
+  );
+}
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
