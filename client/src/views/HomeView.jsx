@@ -36,29 +36,36 @@ const HomeView = ({ trips, loading, onConnect, onViewProfile, user }) => {
                         Stop traveling alone. Connect with verified travelers going your way.
                     </p>
 
-                    <div className="search-bar-container" style={{ display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
-                            <div className="search-input-wrapper">
-                                <MapPin size={20} className="search-icon" />
-                                <input
-                                    placeholder="From (e.g. London)"
-                                    className="search-input"
-                                    value={from}
-                                    onChange={(e) => setFrom(e.target.value)}
-                                />
-                            </div>
-                            <div className="separator hidden md:block"></div>
-                            <div className="search-input-wrapper">
-                                <Navigation size={20} className="search-icon" />
-                                <input
-                                    placeholder="To (e.g. Paris)"
-                                    className="search-input"
-                                    value={to}
-                                    onChange={(e) => setTo(e.target.value)}
-                                />
-                            </div>
+                    <div className="search-bar-container">
+                        <div className="search-input-wrapper">
+                            <MapPin size={20} className="search-icon" />
+                            <input
+                                placeholder="From (e.g. London)"
+                                className="search-input"
+                                value={from}
+                                onChange={(e) => setFrom(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                            />
+                        </div>
+
+                        <div className="search-input-wrapper">
+                            <Navigation size={20} className="search-icon" />
+                            <input
+                                placeholder="To (e.g. Paris)"
+                                className="search-input"
+                                value={to}
+                                onChange={(e) => setTo(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
                             <button className="btn btn-primary search-btn" onClick={handleSearch}>
-                                Search
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                Search Trips
                             </button>
                         </div>
                     </div>
