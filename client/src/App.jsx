@@ -294,6 +294,7 @@ function AppContent() {
             <ChatsListView
               messages={messages}
               user={user}
+              trips={trips}
               onOpenChat={(chat) => {
                 if (chat.type === 'group') {
                   setActiveChat({ type: 'group', id: chat.id, name: chat.name });
