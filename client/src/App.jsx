@@ -22,7 +22,8 @@ import {
   ArrowLeft,
   Phone,
   Video,
-  MoreVertical
+  MoreVertical,
+  Globe
 } from 'lucide-react';
 
 // --- CSS Styles (No Tailwind) ---
@@ -56,7 +57,6 @@ body {
 .app-container {
   min-height: 100vh;
   width: 100%;
-  /* Removed max-width to make it full screen */
   margin: 0 auto;
   position: relative;
   background: radial-gradient(circle at top left, rgba(30, 58, 138, 0.2), transparent 40%),
@@ -81,7 +81,6 @@ body {
   gap: 20px;
 }
 
-/* On mobile, revert to single column if needed, though auto-fill handles it mostly */
 @media (max-width: 480px) {
   .grid-layout {
     grid-template-columns: 1fr;
@@ -163,7 +162,7 @@ body {
   border-top: 1px solid var(--border-light);
   padding: 12px 24px;
   display: flex;
-  justify-content: center; /* Centered nav items for desktop */
+  justify-content: center; 
   gap: 40px;
   align-items: center;
   z-index: 100;
@@ -212,7 +211,7 @@ body {
   position: relative;
   overflow: hidden;
   transition: border-color 0.3s ease;
-  height: 100%; /* For grid height matching */
+  height: 100%; 
   display: flex;
   flex-direction: column;
 }
@@ -301,6 +300,32 @@ body {
   border-radius: 20px;
   border: 1px solid var(--border-light);
 }
+
+.trip-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 16px;
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.2); }
 
 /* --- Companion Specifics --- */
 .companion-card {
@@ -974,12 +999,12 @@ const Header = ({ showSearch, setShowSearch, searchQuery, setSearchQuery, onOpen
 // --- Chat Components (Split Layout) ---
 
 const ChatsListView = ({ onSelectChat, activeChatId }) => {
+  // Mock Data needs to handle both PRIVATE and GLOBAL chats
   const chats = [
-    { id: 1, user: { name: "Sarah Lee", avatar: "https://i.pravatar.cc/150?u=sarah" }, lastMessage: "Hey! Are you still going to Goa?", time: "2m ago", unread: 2 },
-    { id: 2, user: { name: "Rahul Verma", avatar: "https://i.pravatar.cc/150?u=rahul" }, lastMessage: "I'll be at the meeting point.", time: "1h ago", unread: 0 },
-    { id: 3, user: { name: "Priya Singh", avatar: "https://i.pravatar.cc/150?u=priya" }, lastMessage: "Thanks for the ride!", time: "Yesterday", unread: 0 },
-    { id: 4, user: { name: "Amit K.", avatar: "https://i.pravatar.cc/150?u=amit" }, lastMessage: "Can we reschedule?", time: "Mon", unread: 0 },
-    { id: 5, user: { name: "Lisa Wong", avatar: "https://i.pravatar.cc/150?u=lisa" }, lastMessage: "Sure thing.", time: "Mon", unread: 0 },
+    { id: 1, type: 'private', user: { name: "Sarah Lee", avatar: "https://i.pravatar.cc/150?u=sarah" }, lastMessage: "Hey! Are you still going to Goa?", time: "2m ago", unread: 2 },
+    { id: 2, type: 'private', user: { name: "Rahul Verma", avatar: "https://i.pravatar.cc/150?u=rahul" }, lastMessage: "I'll be at the meeting point.", time: "1h ago", unread: 0 },
+    { id: 101, type: 'global', name: "Goa Beach Party Trip", avatar: null, lastMessage: "Sarah: Who's bringing the speakers?", time: "5m ago", unread: 5 },
+    { id: 102, type: 'global', name: "Manali Trekking Group", avatar: null, lastMessage: "Admin: Meeting at 6 AM.", time: "1d ago", unread: 0 },
   ];
 
   return (
@@ -994,10 +1019,17 @@ const ChatsListView = ({ onSelectChat, activeChatId }) => {
             className={`chat-item ${activeChatId === chat.id ? 'active' : ''}`} 
             onClick={() => onSelectChat(chat)}
           >
-            <img src={chat.user.avatar} className="chat-avatar" alt={chat.user.name} />
+            {chat.type === 'global' ? (
+               <div style={{width: 40, height: 40, borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0}}>
+                 <Globe size={20} color="white" />
+               </div>
+            ) : (
+               <img src={chat.user.avatar} className="chat-avatar" alt={chat.user.name} />
+            )}
+            
             <div className="chat-info">
               <div className="chat-header-row">
-                <span className="chat-name">{chat.user.name}</span>
+                <span className="chat-name">{chat.type === 'global' ? chat.name : chat.user.name}</span>
                 <span className="chat-time">{chat.time}</span>
               </div>
               <div style={{display: 'flex', justifyContent: 'space-between'}}>
@@ -1013,20 +1045,25 @@ const ChatsListView = ({ onSelectChat, activeChatId }) => {
 };
 
 const ChatDetailView = ({ chat, onBack }) => {
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Hey! Are you still going to Goa?", sender: 'them', time: "10:30 AM" },
-    { id: 2, text: "Yes, I am! Can't wait.", sender: 'me', time: "10:32 AM" },
-    { id: 3, text: "Awesome, let's coordinate the flight.", sender: 'them', time: "10:35 AM" }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef(null);
 
-  // Reset messages when switching chat (Mock data reset)
+  // Initialize messages based on chat type
   useEffect(() => {
-    setMessages([
-        { id: 1, text: `Hey ${chat.user.name.split(' ')[0]} here!`, sender: 'them', time: "10:30 AM" },
-        { id: 2, text: "Hey! How's it going?", sender: 'me', time: "10:32 AM" }
-    ]);
+    if (chat.type === 'global') {
+      setMessages([
+        { id: 1, text: "Hey everyone! Who is excited for Goa?", sender: 'Sarah', time: "10:00 AM", isMe: false },
+        { id: 2, text: "I am! Just booked my tickets.", sender: 'Rahul', time: "10:05 AM", isMe: false },
+        { id: 3, text: "Same here!", sender: 'Me', time: "10:10 AM", isMe: true }
+      ]);
+    } else {
+      // Private Chat
+      setMessages([
+        { id: 1, text: `Hey ${chat.user.name.split(' ')[0]} here!`, sender: chat.user.name, time: "10:30 AM", isMe: false },
+        { id: 2, text: "Hey! How's it going?", sender: 'Me', time: "10:32 AM", isMe: true }
+      ]);
+    }
   }, [chat]);
 
   const scrollToBottom = () => {
@@ -1038,7 +1075,7 @@ const ChatDetailView = ({ chat, onBack }) => {
   const handleSend = () => {
     if (!inputText.trim()) return;
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setMessages([...messages, { id: Date.now(), text: inputText, sender: 'me', time: now }]);
+    setMessages([...messages, { id: Date.now(), text: inputText, sender: 'Me', time: now, isMe: true }]);
     setInputText('');
   };
 
@@ -1048,13 +1085,25 @@ const ChatDetailView = ({ chat, onBack }) => {
         <button className="mobile-back-btn" onClick={onBack} style={{background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: 8, marginLeft: -8}}>
           <ArrowLeft size={24} />
         </button>
-        <div style={{position: 'relative'}}>
-           <img src={chat.user.avatar} style={{width: 36, height: 36, borderRadius: '50%', border: '2px solid #262626'}} alt="u" />
-           <div style={{position: 'absolute', bottom: 0, right: 0, width: 8, height: 8, background: '#10b981', borderRadius: '50%', border: '1px solid #1a1a1a'}}></div>
-        </div>
+        
+        {chat.type === 'global' ? (
+           <div style={{width: 36, height: 36, borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+             <Globe size={18} color="white" />
+           </div>
+        ) : (
+           <div style={{position: 'relative'}}>
+             <img src={chat.user.avatar} style={{width: 36, height: 36, borderRadius: '50%', border: '2px solid #262626'}} alt="u" />
+             <div style={{position: 'absolute', bottom: 0, right: 0, width: 8, height: 8, background: '#10b981', borderRadius: '50%', border: '1px solid #1a1a1a'}}></div>
+           </div>
+        )}
+
         <div style={{flex: 1}}>
-           <span style={{fontWeight: 'bold', color: 'white', display: 'block', fontSize: 14}}>{chat.user.name}</span>
-           <span style={{fontSize: 10, color: '#10b981'}}>Active Now</span>
+           <span style={{fontWeight: 'bold', color: 'white', display: 'block', fontSize: 14}}>
+             {chat.type === 'global' ? chat.name : chat.user.name}
+           </span>
+           <span style={{fontSize: 10, color: chat.type === 'global' ? '#9ca3af' : '#10b981'}}>
+             {chat.type === 'global' ? '12 Members' : 'Active Now'}
+           </span>
         </div>
         <div style={{display: 'flex', gap: 12, color: 'white'}}>
            <Phone size={18} />
@@ -1065,7 +1114,11 @@ const ChatDetailView = ({ chat, onBack }) => {
       
       <div className="chat-messages">
         {messages.map(msg => (
-          <div key={msg.id} className={`message-bubble ${msg.sender === 'me' ? 'sent' : 'received'}`}>
+          <div key={msg.id} className={`message-bubble ${msg.isMe ? 'sent' : 'received'}`}>
+            {/* Show sender name in Global Chat if not me */}
+            {chat.type === 'global' && !msg.isMe && (
+              <div style={{fontSize: '10px', color: '#ec4899', marginBottom: '2px', fontWeight: 'bold'}}>{msg.sender}</div>
+            )}
             <div>{msg.text}</div>
             <span className="message-time">{msg.time}</span>
           </div>
@@ -1117,11 +1170,6 @@ const ChatDetailView = ({ chat, onBack }) => {
 };
 
 const InstagramChatLayout = ({ activeChat, onSelectChat, onClearChat }) => {
-  // Logic: 
-  // Desktop: Sidebar + (Detail OR Empty State)
-  // Mobile: If ActiveChat -> Detail (FullScreen). If Not -> Sidebar (FullScreen)
-  
-  // We use CSS classes for mobile toggling to keep DOM present but hidden
   const containerClass = `chat-split-container gsap-fade-up ${activeChat ? 'mobile-active' : ''}`;
 
   return (
@@ -1146,7 +1194,7 @@ const InstagramChatLayout = ({ activeChat, onSelectChat, onClearChat }) => {
   );
 }
 
-const FeedView = ({ trips, loading, error }) => {
+const FeedView = ({ trips, loading, error, onJoinChat }) => {
   if (loading) return <div className="flex justify-center items-center" style={{ height: '50vh' }}><Loader2 className="animate-spin" color="#06b6d4" size={32} /></div>;
   if (error) return <div className="text-center p-4" style={{ color: '#ef4444' }}>Failed to load trips</div>;
 
@@ -1197,6 +1245,20 @@ const FeedView = ({ trips, loading, error }) => {
               {trip.tags && trip.tags.map((tag, idx) => (
                 <span key={idx} className="tag">#{tag}</span>
               ))}
+            </div>
+
+            {/* Added: Actions Bar for Chat */}
+            <div className="trip-actions">
+              <button className="btn-secondary">
+                <Plus size={14} /> Join Trip
+              </button>
+              <button 
+                className="btn-secondary" 
+                style={{background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4', borderColor: 'rgba(6, 182, 212, 0.3)'}}
+                onClick={() => onJoinChat(trip)}
+              >
+                <MessageCircle size={14} /> Global Chat
+              </button>
             </div>
           </div>
         )) : (
@@ -1507,6 +1569,21 @@ export default function App() {
     setShowModal(true);
   };
 
+  // NEW: Handler for joining a Global Chat from the Trip Card
+  const handleJoinGlobalChat = (trip) => {
+    const globalChatObj = {
+      id: `global-${trip.id}`,
+      type: 'global',
+      name: `${trip.destination} Trip Chat`,
+      user: { name: 'Group', avatar: null }, // Fallback for list view logic
+      lastMessage: "Joined the chat",
+      time: "Now",
+      unread: 0
+    };
+    setActiveChat(globalChatObj);
+    setActiveTab('chat-list');
+  };
+
   // Filter Logic
   const filteredTrips = trips.filter(t =>
     (t.destination && t.destination.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -1537,7 +1614,14 @@ export default function App() {
         />
 
         <div style={{ minHeight: 'calc(100vh - 140px)' }}>
-          {activeTab === 'home' && <FeedView trips={filteredTrips} loading={loading} error={error} />}
+          {activeTab === 'home' && (
+            <FeedView 
+              trips={filteredTrips} 
+              loading={loading} 
+              error={error} 
+              onJoinChat={handleJoinGlobalChat} 
+            />
+          )}
           {activeTab === 'companion' && <CompanionView companions={filteredTrips} loading={loading} />}
           {activeTab === 'ride' && <RideView />}
           {activeTab === 'profile' && <ProfileView user={user} />}
