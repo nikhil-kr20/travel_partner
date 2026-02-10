@@ -1,4 +1,5 @@
 const Trip = require('../models/Trip');
+const User = require('../models/User');
 
 // @desc    Get all trips
 // @route   GET /api/trips
@@ -7,13 +8,28 @@ const getTrips = async (req, res) => {
     try {
         const trips = await Trip.find().sort({ createdAt: -1 }); // Newest first
 
-        // Transform _id to id for frontend compatibility if needed, though Mongo uses _id
-        const tripsWithId = trips.map(trip => ({
-            ...trip.toObject(),
-            id: trip._id // Ensure frontend sees 'id' property
+        // Populate host user data
+        const tripsWithHostData = await Promise.all(trips.map(async (trip) => {
+            let hostUser = null;
+
+            // Try to find the host user in the database
+            if (trip.hostId) {
+                try {
+                    hostUser = await User.findById(trip.hostId).select('name email avatar');
+                } catch (err) {
+                    console.log('Could not find user for hostId:', trip.hostId);
+                }
+            }
+
+            return {
+                ...trip.toObject(),
+                id: trip._id,
+                hostName: hostUser?.name || trip.hostName || 'Anonymous',
+                hostAvatar: hostUser?.avatar || `https://i.pravatar.cc/150?u=${trip._id}`
+            };
         }));
 
-        res.json(tripsWithId);
+        res.json(tripsWithHostData);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

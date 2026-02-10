@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import io from 'socket.io-client';
 import {
   MapPin,
   Calendar,
@@ -834,7 +835,21 @@ const useGSAP = () => {
   }, []);
 };
 
-const API_BASE_URL = "https://travel-partner-7gbm.onrender.com/api";
+// Local Development URLs
+const API_BASE_URL = "http://localhost:3000/api";
+const SOCKET_URL = "http://localhost:3000";
+
+// Initialize Socket.IO connection
+let socket = null;
+const getSocket = () => {
+  if (!socket) {
+    socket = io(SOCKET_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true
+    });
+  }
+  return socket;
+};
 
 const RIDE_OPTIONS = [
   { id: 'auto', name: 'Auto', icon: Zap, price: '₹45', eta: '3m' },
@@ -868,9 +883,10 @@ const AuthView = ({ onLoginSuccess }) => {
     const endpoint = isLogin ? '/auth/login' : '/auth/register';
     const payload = isLogin
       ? { email: formData.email, password: formData.password }
-      : { username: formData.name, email: formData.email, password: formData.password };
+      : { name: formData.name, email: formData.email, password: formData.password };
 
     try {
+      console.log('Sending auth request:', endpoint, payload);
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -878,15 +894,36 @@ const AuthView = ({ onLoginSuccess }) => {
       });
 
       const data = await res.json();
+      console.log('Auth response:', data);
 
       if (!res.ok) {
+        console.error('Auth failed:', data);
         throw new Error(data.message || 'Authentication failed');
       }
 
       // Success - Save token/user and redirect
-      onLoginSuccess(data.user || { name: formData.name || "User" });
+      console.log('Login successful, raw data:', data);
+
+      let userData = data.user;
+      if (!userData && (data._id || data.id)) {
+        console.log('User data found at root level, using root object');
+        userData = data;
+      }
+
+      userData = userData || {};
+
+      // Ensure user has all required fields
+      if (!userData.name) {
+        console.warn('User object missing name field!', userData);
+        // Extract name from email if missing
+        userData.name = userData.email ? userData.email.split('@')[0] : 'User';
+      }
+
+      console.log('Final user data to save:', userData);
+      onLoginSuccess(userData);
 
     } catch (err) {
+      console.error('Auth error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -1051,17 +1088,36 @@ const Header = ({ showSearch, setShowSearch, searchQuery, setSearchQuery, onOpen
 
 // --- Chat Components (Split Layout) ---
 
-const ChatsListView = ({ onSelectChat, activeChatId }) => {
-  const [filter, setFilter] = useState('All'); // 'All', 'Personal', 'Group'
+const ChatsListView = ({ onSelectChat, activeChatId, userId }) => {
+  const [filter, setFilter] = useState('All');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [chats, setChats] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock Data needs to handle both PRIVATE and GLOBAL chats
-  const chats = [
-    { id: 1, type: 'private', user: { name: "Sarah Lee", avatar: "https://i.pravatar.cc/150?u=sarah" }, lastMessage: "Hey! Are you still going to Goa?", time: "2m ago", unread: 2 },
-    { id: 2, type: 'private', user: { name: "Rahul Verma", avatar: "https://i.pravatar.cc/150?u=rahul" }, lastMessage: "I'll be at the meeting point.", time: "1h ago", unread: 0 },
-    { id: 101, type: 'global', name: "Goa Beach Party Trip", avatar: null, lastMessage: "Sarah: Who's bringing the speakers?", time: "5m ago", unread: 5 },
-    { id: 102, type: 'global', name: "Manali Trekking Group", avatar: null, lastMessage: "Admin: Meeting at 6 AM.", time: "1d ago", unread: 0 },
-  ];
+  // Fetch real chats from backend
+  useEffect(() => {
+    const fetchChats = async () => {
+      if (!userId) return;
+
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_BASE_URL}/chats?userId=${userId}`);
+        const data = await res.json();
+        setChats(data);
+      } catch (error) {
+        console.error('Error fetching chats:', error);
+        setChats([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChats();
+
+    // Refresh chats every 10 seconds
+    const interval = setInterval(fetchChats, 10000);
+    return () => clearInterval(interval);
+  }, [userId]);
 
   const filteredChats = chats.filter(chat => {
     if (filter === 'All') return true;
@@ -1071,90 +1127,157 @@ const ChatsListView = ({ onSelectChat, activeChatId }) => {
   });
 
   return (
-    <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
-       <div style={{padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-         <h2 style={{fontSize: 16, fontWeight: 'bold', margin: 0}}>Messages</h2>
-         
-         {/* Filter Dropdown */}
-         <div className="filter-dropdown-container">
-            <button className="filter-dropdown-btn" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-              {filter} <ChevronDown size={14} />
-            </button>
-            
-            {isDropdownOpen && (
-              <div className="filter-dropdown-menu">
-                {['All', 'Personal', 'Group'].map((opt) => (
-                  <div 
-                    key={opt} 
-                    className={`filter-option ${filter === opt ? 'selected' : ''}`}
-                    onClick={() => { setFilter(opt); setIsDropdownOpen(false); }}
-                  >
-                    {opt}
-                  </div>
-                ))}
-              </div>
-            )}
-         </div>
-       </div>
-       
-       <div style={{flex: 1, overflowY: 'auto'}}>
-        {filteredChats.map(chat => (
-          <div 
-            key={chat.id} 
-            className={`chat-item ${activeChatId === chat.id ? 'active' : ''}`} 
-            onClick={() => onSelectChat(chat)}
-          >
-            {chat.type === 'global' ? (
-               <div style={{width: 40, height: 40, borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0}}>
-                 <Globe size={20} color="white" />
-               </div>
-            ) : (
-               <img src={chat.user.avatar} className="chat-avatar" alt={chat.user.name} />
-            )}
-            
-            <div className="chat-info">
-              <div className="chat-header-row">
-                <span className="chat-name">{chat.type === 'global' ? chat.name : chat.user.name}</span>
-                <span className="chat-time">{chat.time}</span>
-              </div>
-              <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                <span className="chat-preview">{chat.lastMessage}</span>
-                {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
-              </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h2 style={{ fontSize: 16, fontWeight: 'bold', margin: 0 }}>Messages</h2>
+
+        {/* Filter Dropdown */}
+        <div className="filter-dropdown-container">
+          <button className="filter-dropdown-btn" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+            {filter} <ChevronDown size={14} />
+          </button>
+
+          {isDropdownOpen && (
+            <div className="filter-dropdown-menu">
+              {['All', 'Personal', 'Group'].map((opt) => (
+                <div
+                  key={opt}
+                  className={`filter-option ${filter === opt ? 'selected' : ''}`}
+                  onClick={() => { setFilter(opt); setIsDropdownOpen(false); }}
+                >
+                  {opt}
+                </div>
+              ))}
             </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {loading ? (
+          <div className="flex justify-center items-center" style={{ padding: '40px' }}>
+            <Loader2 className="animate-spin" color="#06b6d4" size={28} />
           </div>
-        ))}
-        {filteredChats.length === 0 && (
-          <div style={{padding: '20px', textAlign: 'center', color: '#9ca3af', fontSize: '14px'}}>
-            No {filter !== 'All' ? filter.toLowerCase() : ''} chats found.
-          </div>
+        ) : (
+          <>
+            {filteredChats.map(chat => (
+              <div
+                key={chat.id}
+                className={`chat-item ${activeChatId === chat.id ? 'active' : ''}`}
+                onClick={() => onSelectChat(chat)}
+              >
+                {chat.type === 'global' ? (
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Globe size={20} color="white" />
+                  </div>
+                ) : (
+                  <img src={chat.user.avatar} className="chat-avatar" alt={chat.user.name} />
+                )}
+
+                <div className="chat-info">
+                  <div className="chat-header-row">
+                    <span className="chat-name">{chat.type === 'global' ? chat.name : chat.user.name}</span>
+                    <span className="chat-time">{chat.time}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span className="chat-preview">{chat.lastMessage}</span>
+                    {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {filteredChats.length === 0 && !loading && (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
+                No {filter !== 'All' ? filter.toLowerCase() : ''} chats found.
+              </div>
+            )}
+          </>
         )}
-       </div>
+      </div>
     </div>
   );
 };
 
-const ChatDetailView = ({ chat, onBack }) => {
+const ChatDetailView = ({ chat, onBack, userId, userName }) => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
+  const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
 
-  // Initialize messages based on chat type
+  // Fetch messages from backend
   useEffect(() => {
+    const fetchMessages = async () => {
+      if (!chat || !chat.id || !userId) return;
+
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_BASE_URL}/chats/${chat.id}/messages?userId=${userId}`);
+        const data = await res.json();
+        setMessages(data);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        setMessages([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, [chat, userId]);
+
+  // Socket.IO setup for real-time messages
+  useEffect(() => {
+    if (!chat || !userId) return;
+
+    const socket = getSocket();
+    socketRef.current = socket;
+
+    // Join appropriate room
     if (chat.type === 'global') {
-      setMessages([
-        { id: 1, text: "Hey everyone! Who is excited for Goa?", sender: 'Sarah', time: "10:00 AM", isMe: false },
-        { id: 2, text: "I am! Just booked my tickets.", sender: 'Rahul', time: "10:05 AM", isMe: false },
-        { id: 3, text: "Same here!", sender: 'Me', time: "10:10 AM", isMe: true }
-      ]);
+      socket.emit('join_trip', chat.tripId || chat.id);
+
+      // Listen for trip messages
+      const handleTripMessage = (data) => {
+        const formattedMessage = {
+          id: data._id || Date.now(),
+          text: data.text,
+          sender: data.senderName,
+          time: new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isMe: data.senderId === userId
+        };
+        setMessages(prev => [...prev, formattedMessage]);
+      };
+
+      socket.on('receive_trip_message', handleTripMessage);
+
+      return () => {
+        socket.off('receive_trip_message', handleTripMessage);
+      };
     } else {
-      // Private Chat
-      setMessages([
-        { id: 1, text: `Hey ${chat.user.name.split(' ')[0]} here!`, sender: chat.user.name, time: "10:30 AM", isMe: false },
-        { id: 2, text: "Hey! How's it going?", sender: 'Me', time: "10:32 AM", isMe: true }
-      ]);
+      // Private chat
+      socket.emit('join_private', userId);
+
+      const handlePrivateMessage = (data) => {
+        const formattedMessage = {
+          id: data._id || Date.now(),
+          text: data.text,
+          sender: data.senderName,
+          time: new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isMe: data.senderId === userId
+        };
+        setMessages(prev => [...prev, formattedMessage]);
+      };
+
+      socket.on('receive_private_message', handlePrivateMessage);
+      socket.on('message_sent', handlePrivateMessage);
+
+      return () => {
+        socket.off('receive_private_message', handlePrivateMessage);
+        socket.off('message_sent', handlePrivateMessage);
+      };
     }
-  }, [chat]);
+  }, [chat, userId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1162,52 +1285,91 @@ const ChatDetailView = ({ chat, onBack }) => {
 
   useEffect(scrollToBottom, [messages]);
 
-  const handleSend = () => {
-    if (!inputText.trim()) return;
-    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setMessages([...messages, { id: Date.now(), text: inputText, sender: 'Me', time: now, isMe: true }]);
-    setInputText('');
+  const handleSend = async () => {
+    if (!inputText.trim() || !userId || !userName) return;
+
+    const socket = socketRef.current;
+    const now = new Date();
+
+    try {
+      // Send via HTTP API
+      const res = await fetch(`${API_BASE_URL}/chats/${chat.id}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId,
+          userName: userName,
+          text: inputText
+        })
+      });
+
+      const newMessage = await res.json();
+
+      // Also emit via Socket.IO for real-time updates
+      if (chat.type === 'global') {
+        socket?.emit('send_trip_message', {
+          text: inputText,
+          senderId: userId,
+          senderName: userName,
+          tripId: chat.tripId || chat.id,
+          timestamp: now
+        });
+      } else {
+        const otherUserId = chat.participants?.find(p => p !== userId);
+        socket?.emit('send_private_message', {
+          text: inputText,
+          senderId: userId,
+          senderName: userName,
+          toUserId: otherUserId,
+          timestamp: now
+        });
+      }
+
+      setInputText('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   return (
     <div className="chat-detail-container">
       <div className="chat-detail-header">
-        <button className="mobile-back-btn" onClick={onBack} style={{background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: 8, marginLeft: -8}}>
+        <button className="mobile-back-btn" onClick={onBack} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: 8, marginLeft: -8 }}>
           <ArrowLeft size={24} />
         </button>
-        
+
         {chat.type === 'global' ? (
-           <div style={{width: 36, height: 36, borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-             <Globe size={18} color="white" />
-           </div>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Globe size={18} color="white" />
+          </div>
         ) : (
-           <div style={{position: 'relative'}}>
-             <img src={chat.user.avatar} style={{width: 36, height: 36, borderRadius: '50%', border: '2px solid #262626'}} alt="u" />
-             <div style={{position: 'absolute', bottom: 0, right: 0, width: 8, height: 8, background: '#10b981', borderRadius: '50%', border: '1px solid #1a1a1a'}}></div>
-           </div>
+          <div style={{ position: 'relative' }}>
+            <img src={chat.user.avatar} style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid #262626' }} alt="u" />
+            <div style={{ position: 'absolute', bottom: 0, right: 0, width: 8, height: 8, background: '#10b981', borderRadius: '50%', border: '1px solid #1a1a1a' }}></div>
+          </div>
         )}
 
-        <div style={{flex: 1}}>
-           <span style={{fontWeight: 'bold', color: 'white', display: 'block', fontSize: 14}}>
-             {chat.type === 'global' ? chat.name : chat.user.name}
-           </span>
-           <span style={{fontSize: 10, color: chat.type === 'global' ? '#9ca3af' : '#10b981'}}>
-             {chat.type === 'global' ? '12 Members' : 'Active Now'}
-           </span>
+        <div style={{ flex: 1 }}>
+          <span style={{ fontWeight: 'bold', color: 'white', display: 'block', fontSize: 14 }}>
+            {chat.type === 'global' ? chat.name : chat.user.name}
+          </span>
+          <span style={{ fontSize: 10, color: chat.type === 'global' ? '#9ca3af' : '#10b981' }}>
+            {chat.type === 'global' ? '12 Members' : 'Active Now'}
+          </span>
         </div>
-        <div style={{display: 'flex', gap: 12, color: 'white'}}>
-           <Phone size={18} />
-           <Video size={20} />
-           <MoreVertical size={18} />
+        <div style={{ display: 'flex', gap: 12, color: 'white' }}>
+          <Phone size={18} />
+          <Video size={20} />
+          <MoreVertical size={18} />
         </div>
       </div>
-      
+
       <div className="chat-messages">
         {messages.map(msg => (
           <div key={msg.id} className={`message-bubble ${msg.isMe ? 'sent' : 'received'}`}>
             {/* Show sender name in Global Chat if not me */}
             {chat.type === 'global' && !msg.isMe && (
-              <div style={{fontSize: '10px', color: '#ec4899', marginBottom: '2px', fontWeight: 'bold'}}>{msg.sender}</div>
+              <div style={{ fontSize: '10px', color: '#ec4899', marginBottom: '2px', fontWeight: 'bold' }}>{msg.sender}</div>
             )}
             <div>{msg.text}</div>
             <span className="message-time">{msg.time}</span>
@@ -1217,34 +1379,34 @@ const ChatDetailView = ({ chat, onBack }) => {
       </div>
 
       <div className="chat-input-area">
-        <button style={{background:'none', border:'none', color:'#9ca3af', padding: 4}}><Plus size={20} /></button>
-        <div style={{flex: 1, position: 'relative'}}>
-           <input 
-             value={inputText}
-             onChange={(e) => setInputText(e.target.value)}
-             placeholder="Message..."
-             className="ride-input" 
-             style={{
-               width: '100%', 
-               padding: '10px 14px', 
-               borderRadius: '24px', 
-               background: '#262626',
-               border: '1px solid #404040',
-               fontSize: '13px'
-             }}
-             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-           />
+        <button style={{ background: 'none', border: 'none', color: '#9ca3af', padding: 4 }}><Plus size={20} /></button>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <input
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="Message..."
+            className="ride-input"
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: '24px',
+              background: '#262626',
+              border: '1px solid #404040',
+              fontSize: '13px'
+            }}
+            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+          />
         </div>
-        <button 
-          onClick={handleSend} 
-          className="btn-primary" 
+        <button
+          onClick={handleSend}
+          className="btn-primary"
           style={{
-            width: 36, 
-            height: 36, 
-            padding: 0, 
+            width: 36,
+            height: 36,
+            padding: 0,
             borderRadius: '50%',
-            display: 'flex', 
-            alignItems: 'center', 
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
             background: inputText.trim() ? 'var(--primary)' : '#262626',
             color: inputText.trim() ? 'white' : '#525252',
@@ -1259,24 +1421,24 @@ const ChatDetailView = ({ chat, onBack }) => {
   );
 };
 
-const InstagramChatLayout = ({ activeChat, onSelectChat, onClearChat }) => {
+const InstagramChatLayout = ({ activeChat, onSelectChat, onClearChat, userId, userName }) => {
   const containerClass = `chat-split-container gsap-fade-up ${activeChat ? 'mobile-active' : ''}`;
 
   return (
     <div className={containerClass}>
       <div className="chat-sidebar">
-        <ChatsListView onSelectChat={onSelectChat} activeChatId={activeChat?.id} />
+        <ChatsListView onSelectChat={onSelectChat} activeChatId={activeChat?.id} userId={userId} />
       </div>
       <div className="chat-main-area">
         {activeChat ? (
-          <ChatDetailView chat={activeChat} onBack={onClearChat} />
+          <ChatDetailView chat={activeChat} onBack={onClearChat} userId={userId} userName={userName} />
         ) : (
           <div className="empty-chat-state">
-            <div style={{width: 80, height: 80, borderRadius: '50%', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-               <MessageCircle size={40} />
+            <div style={{ width: 80, height: 80, borderRadius: '50%', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MessageCircle size={40} />
             </div>
-            <h3 style={{fontSize: 18, fontWeight: 'bold'}}>Your Messages</h3>
-            <p style={{fontSize: 13, color: '#6b7280'}}>Send private photos and messages to a friend.</p>
+            <h3 style={{ fontSize: 18, fontWeight: 'bold' }}>Your Messages</h3>
+            <p style={{ fontSize: 13, color: '#6b7280' }}>Send private photos and messages to a friend.</p>
           </div>
         )}
       </div>
@@ -1342,9 +1504,9 @@ const FeedView = ({ trips, loading, error, onJoinChat }) => {
               <button className="btn-secondary">
                 <Plus size={14} /> Join Trip
               </button>
-              <button 
-                className="btn-secondary" 
-                style={{background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4', borderColor: 'rgba(6, 182, 212, 0.3)'}}
+              <button
+                className="btn-secondary"
+                style={{ background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4', borderColor: 'rgba(6, 182, 212, 0.3)' }}
                 onClick={() => onJoinChat(trip)}
               >
                 <MessageCircle size={14} /> Global Chat
@@ -1469,41 +1631,138 @@ const RideView = () => {
   );
 };
 
-const ProfileView = ({ user }) => (
-  <div className="view-container">
-    <div className="profile-header gsap-fade-up">
-      <div className="profile-img-container">
-        <img src={user?.avatar || "https://i.pravatar.cc/150?u=me"} alt="Me" className="profile-img" />
-      </div>
-      <h2 style={{ fontSize: 24, fontWeight: 'bold' }}>{user?.name || "Traveler"}</h2>
-      <p style={{ color: '#9ca3af', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-        <MapPin size={12} /> {user?.location || "Global Citizen"}
-      </p>
-    </div>
+const ProfileView = ({ user }) => {
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-    <div className="stat-grid gsap-fade-up">
-      <div className="stat-box">
-        <span className="stat-val">0</span>
-        <span className="stat-label">Trips</span>
-      </div>
-      <div className="stat-box">
-        <span className="stat-val">5.0</span>
-        <span className="stat-label">Rating</span>
-      </div>
-      <div className="stat-box">
-        <span className="stat-val">0</span>
-        <span className="stat-label">Friends</span>
-      </div>
-    </div>
+  const fetchProfileData = async () => {
+    // If no user at all, show error
+    if (!user) {
+      console.log('No user object provided');
+      setProfileData(null);
+      setLoading(false);
+      return;
+    }
 
-    <div className="gsap-fade-up">
-      <h3 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Past Trips</h3>
-      <div className="card" style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}>
-        <p>No past trips yet. Join one today!</p>
+    // Try to get userId from various possible fields
+    const userId = user._id || user.id || user.user?._id || user.user?.id;
+
+    if (!userId) {
+      console.log('No user ID found in user object:', user);
+      // Just use whatever data we have
+      setProfileData(user.user || user);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching profile for userId:', userId);
+
+      // Add timeout to prevent infinite loading
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const res = await fetch(`${API_BASE_URL}/auth/user/${userId}`, {
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch profile: ${res.status}`);
+      }
+
+      const data = await res.json();
+      console.log('Profile data received:', data);
+      setProfileData(data);
+
+      // Update localStorage with fresh data
+      const updatedUser = { ...user, ...data };
+      localStorage.setItem('travel_user', JSON.stringify(updatedUser));
+
+    } catch (error) {
+      if (!error.message.includes('404')) {
+        console.error('Error fetching profile:', error);
+        setError(error.name === 'AbortError' ? 'Request timeout' : error.message);
+      }
+      // Fallback to user object
+      setProfileData(user.user || user);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="view-container">
+        <div className="flex justify-center items-center" style={{ height: '50vh' }}>
+          <Loader2 className="animate-spin" color="#06b6d4" size={32} />
+        </div>
+      </div>
+    );
+  }
+
+  const displayUser = profileData || user?.user || user;
+
+  return (
+    <div className="view-container">
+      {error && (
+        <div style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: 12, borderRadius: 8, fontSize: 13, textAlign: 'center', marginBottom: 16, border: '1px solid rgba(239,68,68,0.2)' }}>
+          Error loading profile: {error}
+          <button
+            onClick={fetchProfileData}
+            style={{ marginLeft: 10, padding: '4px 12px', borderRadius: 6, background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontSize: 12 }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      <div className="profile-header gsap-fade-up">
+        <div className="profile-img-container">
+          <img src={displayUser?.avatar || "https://i.pravatar.cc/150?u=me"} alt="Me" className="profile-img" />
+        </div>
+        <h2 style={{ fontSize: 24, fontWeight: 'bold' }}>{displayUser?.name || "User"}</h2>
+        <p style={{ color: '#9ca3af', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+          <MapPin size={12} /> {displayUser?.email || "No email"}
+        </p>
+        {/* Debug info - remove in production */}
+        <p style={{ color: '#6b7280', fontSize: 10, marginTop: 8 }}>
+          ID: {displayUser?._id || displayUser?.id || 'No ID'}
+        </p>
+      </div>
+
+      <div className="stat-grid gsap-fade-up">
+        <div className="stat-box">
+          <span className="stat-val">{displayUser?.stats?.trips || 0}</span>
+          <span className="stat-label">Trips</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-val">{displayUser?.stats?.rating || 5.0}</span>
+          <span className="stat-label">Rating</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-val">{displayUser?.stats?.friends || 0}</span>
+          <span className="stat-label">Friends</span>
+        </div>
+      </div>
+
+      <div className="gsap-fade-up">
+        <h3 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Past Trips</h3>
+        <div className="card" style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}>
+          <p>No past trips yet. Join one today!</p>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const CreateModal = ({ onClose, type, onSuccess, user }) => {
   const [formData, setFormData] = useState({ origin: '', destination: '', date: '', description: '' });
@@ -1613,7 +1872,47 @@ export default function App() {
     // Check local storage for existing session
     const savedUser = localStorage.getItem('travel_user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      console.log('Loaded user from localStorage:', parsedUser);
+
+      // Check if user data is incomplete (missing name or other fields)
+      if (!parsedUser.name || !parsedUser._id) {
+        console.warn('Incomplete user data in localStorage, clearing...');
+        localStorage.removeItem('travel_user');
+        return;
+      }
+
+      setUser(parsedUser);
+
+      // Fetch fresh user data from backend to ensure it's up-to-date
+      const refreshUserData = async () => {
+        try {
+          const userId = parsedUser._id || parsedUser.id;
+          if (!userId) return;
+
+          console.log('Refreshing user data from backend...');
+          const res = await fetch(`${API_BASE_URL}/auth/user/${userId}`);
+
+          if (res.status === 404) {
+            // User not found on server - likely stale local ID.
+            // Silently ignore and use local data.
+            return;
+          }
+
+          if (res.ok) {
+            const freshData = await res.json();
+            console.log('Fresh user data from backend:', freshData);
+
+            // Update localStorage with fresh data
+            localStorage.setItem('travel_user', JSON.stringify(freshData));
+            setUser(freshData);
+          }
+        } catch (error) {
+          console.error('Error refreshing user data:', error);
+        }
+      };
+
+      refreshUserData();
     }
   }, []);
 
@@ -1626,17 +1925,17 @@ export default function App() {
       const raw = Array.isArray(data) ? data : (data.trips || []);
 
       setTrips(raw.map(t => ({
-        id: t._id || Math.random(),
+        id: t._id || t.id || Math.random(),
         user: {
           name: t.hostName || "Traveler",
-          avatar: `https://i.pravatar.cc/150?u=${t._id}`
+          avatar: t.hostAvatar || `https://i.pravatar.cc/150?u=${t._id || t.id}`
         },
         origin: t.origin,
         destination: t.destination,
         date: formatDate(t.date),
         description: t.description || "No description.",
         tags: t.tags || ["Travel"],
-        likes: 0,
+        likes: t.likes || 0,
         activity: "Exploring",
         distance: "Unknown"
       })));
@@ -1646,12 +1945,29 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
+    console.log('Current user state:', user);
     fetchTrips();
   }, [user]);
 
   const handleLoginSuccess = (userData) => {
+    console.log('handleLoginSuccess called with:', userData);
+
+    // Validate user data
+    if (!userData || (!userData._id && !userData.id)) {
+      console.error('Invalid user data received - missing ID:', userData);
+      return;
+    }
+
+    // Normalize ID
+    if (!userData._id && userData.id) {
+      userData._id = userData.id;
+    } else if (!userData.id && userData._id) {
+      userData.id = userData._id;
+    }
+
     setUser(userData);
     localStorage.setItem('travel_user', JSON.stringify(userData));
+    console.log('User data saved to state and localStorage:', userData);
   };
 
   const handleFab = () => {
@@ -1659,19 +1975,24 @@ export default function App() {
     setShowModal(true);
   };
 
-  // NEW: Handler for joining a Global Chat from the Trip Card
-  const handleJoinGlobalChat = (trip) => {
-    const globalChatObj = {
-      id: `global-${trip.id}`,
-      type: 'global',
-      name: `${trip.destination} Trip Chat`,
-      user: { name: 'Group', avatar: null }, // Fallback for list view logic
-      lastMessage: "Joined the chat",
-      time: "Now",
-      unread: 0
-    };
-    setActiveChat(globalChatObj);
-    setActiveTab('chat-list');
+  // Handler for joining a Global Chat from the Trip Card
+  const handleJoinGlobalChat = async (trip) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/chats/global`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tripId: trip.id || trip._id,
+          userId: user?._id || user?.id
+        })
+      });
+
+      const { chat } = await res.json();
+      setActiveChat(chat);
+      setActiveTab('chat-list');
+    } catch (error) {
+      console.error('Error joining global chat:', error);
+    }
   };
 
   // Filter Logic
@@ -1694,7 +2015,7 @@ export default function App() {
     <>
       <style>{styles}</style>
       <div className="app-container">
-        
+
         <Header
           showSearch={showSearch}
           setShowSearch={setShowSearch}
@@ -1705,23 +2026,25 @@ export default function App() {
 
         <div style={{ minHeight: 'calc(100vh - 140px)' }}>
           {activeTab === 'home' && (
-            <FeedView 
-              trips={filteredTrips} 
-              loading={loading} 
-              error={error} 
-              onJoinChat={handleJoinGlobalChat} 
+            <FeedView
+              trips={filteredTrips}
+              loading={loading}
+              error={error}
+              onJoinChat={handleJoinGlobalChat}
             />
           )}
           {activeTab === 'companion' && <CompanionView companions={filteredTrips} loading={loading} />}
           {activeTab === 'ride' && <RideView />}
           {activeTab === 'profile' && <ProfileView user={user} />}
-          
+
           {/* New Split View Logic for Chats */}
           {activeTab === 'chat-list' && (
-            <InstagramChatLayout 
-              activeChat={activeChat} 
-              onSelectChat={setActiveChat} 
+            <InstagramChatLayout
+              activeChat={activeChat}
+              onSelectChat={setActiveChat}
               onClearChat={() => setActiveChat(null)}
+              userId={user?._id || user?.id}
+              userName={user?.name || user?.username || 'User'}
             />
           )}
         </div>
@@ -1735,7 +2058,7 @@ export default function App() {
         {showModal && <CreateModal onClose={() => setShowModal(false)} type={createType} onSuccess={fetchTrips} user={user} />}
 
         <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-        
+
       </div>
     </>
   );

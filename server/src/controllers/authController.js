@@ -40,9 +40,13 @@ const registerUser = async (req, res) => {
 
         if (user) {
             res.status(201).json({
-                _id: user.id,
-                name: user.name,
-                email: user.email,
+                user: {
+                    _id: user.id,
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    avatar: user.avatar || `https://i.pravatar.cc/150?u=${user.id}`
+                },
                 token: generateToken(user._id),
             });
         } else {
@@ -79,10 +83,16 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (user && user.password && (await bcrypt.compare(password, user.password))) {
+            console.log('User found for login:', { id: user.id, name: user.name, email: user.email });
+
             res.json({
-                _id: user.id,
-                name: user.name,
-                email: user.email,
+                user: {
+                    _id: user.id,
+                    id: user.id,
+                    name: user.name || 'User',
+                    email: user.email,
+                    avatar: user.avatar || `https://i.pravatar.cc/150?u=${user.id}`
+                },
                 token: generateToken(user._id),
             });
         } else {

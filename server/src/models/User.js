@@ -14,6 +14,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    avatar: {
+        type: String,
+        default: function () {
+            return `https://i.pravatar.cc/150?u=${this._id}`;
+        }
+    },
     createdAt: {
         type: Date,
         default: Date.now,

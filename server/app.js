@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./src/config/db');
 const tripRoutes = require('./src/routes/tripRoutes');
 const messageRoutes = require('./src/routes/messageRoutes');
+const chatRoutes = require('./src/routes/chatRoutes');
 const Message = require('./src/models/Message');
 
 dotenv.config();
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use('/api/trips', tripRoutes);
 app.use('/api/auth', require('./src/routes/authRoutes'));
 app.use('/api/messages', messageRoutes);
+app.use('/api/chats', chatRoutes);
 
 const io = new Server(server, {
     cors: {
@@ -114,3 +116,5 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`Access locally at: http://localhost:${PORT}`);
     console.log(`Access on network at: http://<your-ip>:${PORT}`);
 });
+
+console.log('Chat routes loaded.');
