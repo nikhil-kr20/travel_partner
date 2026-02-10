@@ -835,9 +835,16 @@ const useGSAP = () => {
   }, []);
 };
 
-// Local Development URLs
-const API_BASE_URL = "http://localhost:3000/api";
-const SOCKET_URL = "http://localhost:3000";
+// Single-tunnel friendly defaults: frontend and backend share one public origin via Vite proxy.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD
+    ? "https://travel-partner-7gbm.onrender.com/api"
+    : "/api");
+
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ||
+  (import.meta.env.PROD
+    ? "https://travel-partner-7gbm.onrender.com"
+    : window.location.origin);
 
 // Initialize Socket.IO connection
 let socket = null;
