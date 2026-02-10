@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  MapPin, 
-  Calendar, 
-  Users, 
-  MessageCircle, 
-  Search, 
-  Plus, 
-  Home, 
-  Compass, 
-  Car, 
-  User, 
+import {
+  MapPin,
+  Calendar,
+  Users,
+  MessageCircle,
+  Search,
+  Plus,
+  Home,
+  Compass,
+  Car,
+  User,
   Navigation,
   Zap,
   Map as MapIcon,
@@ -17,7 +17,8 @@ import {
   Loader2,
   Lock,
   Mail,
-  ArrowRight
+  ArrowRight,
+  X
 } from 'lucide-react';
 
 // --- CSS Styles (No Tailwind) ---
@@ -93,6 +94,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 64px;
 }
 
 .brand {
@@ -527,9 +529,18 @@ body {
   margin-left: 4px;
 }
 
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 `;
 
@@ -550,7 +561,7 @@ const useGSAP = () => {
       }
     };
     document.body.appendChild(script);
-    return () => { if(document.body.contains(script)) document.body.removeChild(script); };
+    return () => { if (document.body.contains(script)) document.body.removeChild(script); };
   }, []);
 };
 
@@ -586,7 +597,7 @@ const AuthView = ({ onLoginSuccess }) => {
     setError(null);
 
     const endpoint = isLogin ? '/auth/login' : '/auth/register';
-    const payload = isLogin 
+    const payload = isLogin
       ? { email: formData.email, password: formData.password }
       : { username: formData.name, email: formData.email, password: formData.password };
 
@@ -598,7 +609,7 @@ const AuthView = ({ onLoginSuccess }) => {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) {
         throw new Error(data.message || 'Authentication failed');
       }
@@ -615,19 +626,19 @@ const AuthView = ({ onLoginSuccess }) => {
 
   return (
     <div className="auth-container">
-      <div className="card gsap-fade-up" style={{maxWidth: 400, margin: '0 auto', width: '100%', padding: 32}}>
+      <div className="card gsap-fade-up" style={{ maxWidth: 400, margin: '0 auto', width: '100%', padding: 32 }}>
         <div className="text-center mb-8">
-          <div className="logo-box" style={{width: 60, height: 60, margin: '0 auto 16px'}}>
+          <div className="logo-box" style={{ width: 60, height: 60, margin: '0 auto 16px' }}>
             <Navigation size={32} />
           </div>
-          <h1 className="brand-text" style={{fontSize: 28}}>TraveLink</h1>
-          <p style={{color: '#9ca3af', marginTop: 8}}>
+          <h1 className="brand-text" style={{ fontSize: 28 }}>TraveLink</h1>
+          <p style={{ color: '#9ca3af', marginTop: 8 }}>
             {isLogin ? "Welcome back, traveler!" : "Start your adventure today."}
           </p>
         </div>
 
         {error && (
-          <div style={{background: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: 12, borderRadius: 8, fontSize: 13, textAlign: 'center', marginBottom: 16, border: '1px solid rgba(239,68,68,0.2)'}}>
+          <div style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: 12, borderRadius: 8, fontSize: 13, textAlign: 'center', marginBottom: 16, border: '1px solid rgba(239,68,68,0.2)' }}>
             {error}
           </div>
         )}
@@ -636,13 +647,13 @@ const AuthView = ({ onLoginSuccess }) => {
           {!isLogin && (
             <div className="form-group">
               <label className="form-label">Full Name</label>
-              <div className="input-group" style={{background: 'rgba(255,255,255,0.05)', marginBottom: 0}}>
+              <div className="input-group" style={{ background: 'rgba(255,255,255,0.05)', marginBottom: 0 }}>
                 <User size={18} color="#9ca3af" />
-                <input 
+                <input
                   name="name"
-                  type="text" 
-                  className="ride-input" 
-                  placeholder="John Doe" 
+                  type="text"
+                  className="ride-input"
+                  placeholder="John Doe"
                   value={formData.name}
                   onChange={handleChange}
                   required={!isLogin}
@@ -653,13 +664,13 @@ const AuthView = ({ onLoginSuccess }) => {
 
           <div className="form-group">
             <label className="form-label">Email Address</label>
-            <div className="input-group" style={{background: 'rgba(255,255,255,0.05)', marginBottom: 0}}>
+            <div className="input-group" style={{ background: 'rgba(255,255,255,0.05)', marginBottom: 0 }}>
               <Mail size={18} color="#9ca3af" />
-              <input 
+              <input
                 name="email"
-                type="email" 
-                className="ride-input" 
-                placeholder="you@example.com" 
+                type="email"
+                className="ride-input"
+                placeholder="you@example.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -669,13 +680,13 @@ const AuthView = ({ onLoginSuccess }) => {
 
           <div className="form-group">
             <label className="form-label">Password</label>
-            <div className="input-group" style={{background: 'rgba(255,255,255,0.05)', marginBottom: 0}}>
+            <div className="input-group" style={{ background: 'rgba(255,255,255,0.05)', marginBottom: 0 }}>
               <Lock size={18} color="#9ca3af" />
-              <input 
+              <input
                 name="password"
-                type="password" 
-                className="ride-input" 
-                placeholder="••••••••" 
+                type="password"
+                className="ride-input"
+                placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
                 required
@@ -683,7 +694,7 @@ const AuthView = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary" style={{marginTop: 24}} disabled={loading}>
+          <button type="submit" className="btn-primary" style={{ marginTop: 24 }} disabled={loading}>
             {loading ? <Loader2 className="animate-spin" size={20} /> : (isLogin ? "Sign In" : "Create Account")}
           </button>
         </form>
@@ -725,27 +736,53 @@ const Navbar = ({ activeTab, setActiveTab }) => {
   );
 };
 
-const Header = () => (
+const Header = ({ showSearch, setShowSearch, searchQuery, setSearchQuery }) => (
   <header className="header">
-    <div className="brand">
-      <div className="logo-box">
-        <Navigation size={18} />
+    {showSearch ? (
+      <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '12px' }}>
+        <Search size={20} color="#9ca3af" />
+        <input
+          type="text"
+          autoFocus
+          placeholder="Search places..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+            color: 'white',
+            flex: 1,
+            fontSize: '16px'
+          }}
+        />
+        <button onClick={() => { setShowSearch(false); setSearchQuery(''); }} style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: '#9ca3af' }}>
+          <X size={20} />
+        </button>
       </div>
-      <h1 className="brand-text">TraveLink</h1>
-    </div>
-    <div className="header-actions">
-      <button><Search size={22} /></button>
-      <button style={{position: 'relative'}}>
-        <MessageCircle size={22} />
-        <span style={{position: 'absolute', top: 0, right: 0, width: 8, height: 8, background: '#ef4444', borderRadius: '50%'}}></span>
-      </button>
-    </div>
+    ) : (
+      <>
+        <div className="brand">
+          <div className="logo-box">
+            <Navigation size={18} />
+          </div>
+          <h1 className="brand-text">TraveLink</h1>
+        </div>
+        <div className="header-actions">
+          <button onClick={() => setShowSearch(true)}><Search size={22} /></button>
+          <button style={{ position: 'relative' }}>
+            <MessageCircle size={22} />
+            <span style={{ position: 'absolute', top: 0, right: 0, width: 8, height: 8, background: '#ef4444', borderRadius: '50%' }}></span>
+          </button>
+        </div>
+      </>
+    )}
   </header>
 );
 
 const FeedView = ({ trips, loading, error }) => {
-  if (loading) return <div className="flex justify-center items-center" style={{height: '50vh'}}><Loader2 className="animate-spin" color="#06b6d4" size={32} /></div>;
-  if (error) return <div className="text-center p-4" style={{color: '#ef4444'}}>Failed to load trips</div>;
+  if (loading) return <div className="flex justify-center items-center" style={{ height: '50vh' }}><Loader2 className="animate-spin" color="#06b6d4" size={32} /></div>;
+  if (error) return <div className="text-center p-4" style={{ color: '#ef4444' }}>Failed to load trips</div>;
 
   return (
     <div className="view-container">
@@ -754,7 +791,7 @@ const FeedView = ({ trips, loading, error }) => {
         <p>Plan your next big adventure together.</p>
       </div>
 
-      {trips.map((trip) => (
+      {trips.length > 0 ? trips.map((trip) => (
         <div key={trip.id} className="card gsap-fade-up">
           <div className="card-header">
             <div className="user-info">
@@ -795,7 +832,9 @@ const FeedView = ({ trips, loading, error }) => {
             ))}
           </div>
         </div>
-      ))}
+      )) : (
+        <div className="text-center text-gray-500 py-10">No trips found.</div>
+      )}
     </div>
   );
 };
@@ -811,7 +850,7 @@ const CompanionView = ({ companions, loading }) => {
       </div>
 
       <div className="flex-col gap-4">
-        {companions.map((item) => (
+        {companions.length > 0 ? companions.map((item) => (
           <div key={item.id} className="companion-card gsap-fade-up">
             <div className="companion-inner">
               <div className="companion-header">
@@ -823,20 +862,22 @@ const CompanionView = ({ companions, loading }) => {
                 </div>
               </div>
 
-              <h3 style={{fontSize: 18, fontWeight: 'bold', margin: '4px 0'}}>{item.destination}</h3>
-              <p style={{fontSize: 13, color: '#9ca3af', marginBottom: 12}}>{item.date}</p>
-              <p style={{fontStyle: 'italic', fontSize: 13, color: '#d1d5db', flexGrow: 1}}>"{item.description}"</p>
+              <h3 style={{ fontSize: 18, fontWeight: 'bold', margin: '4px 0' }}>{item.destination}</h3>
+              <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 12 }}>{item.date}</p>
+              <p style={{ fontStyle: 'italic', fontSize: 13, color: '#d1d5db', flexGrow: 1 }}>"{item.description}"</p>
 
-              <div className="flex justify-between items-center" style={{marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.1)'}}>
+              <div className="flex justify-between items-center" style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                 <div className="flex items-center gap-2">
-                  <img src={item.user.avatar} className="avatar" style={{width: 28, height: 28, border: 'none'}} alt="u" />
-                  <span style={{fontSize: 12, color: '#d1d5db'}}>{item.user.name}</span>
+                  <img src={item.user.avatar} className="avatar" style={{ width: 28, height: 28, border: 'none' }} alt="u" />
+                  <span style={{ fontSize: 12, color: '#d1d5db' }}>{item.user.name}</span>
                 </div>
                 <button className="btn-join">Join</button>
               </div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="text-center text-gray-500 py-10">No companions found matching your search.</div>
+        )}
       </div>
     </div>
   );
@@ -849,7 +890,7 @@ const RideView = () => {
   const [status, setStatus] = useState('idle');
 
   const handleBook = () => {
-    if(!pickup || !dropoff || !selectedRide) return;
+    if (!pickup || !dropoff || !selectedRide) return;
     setStatus('searching');
     setTimeout(() => setStatus('found'), 2000);
   };
@@ -857,35 +898,35 @@ const RideView = () => {
   return (
     <div className="ride-container relative">
       <div className="map-placeholder">
-        <div style={{position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 200, height: 200, background: 'rgba(6,182,212,0.1)', borderRadius: '50%', filter: 'blur(50px)'}}></div>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 200, height: 200, background: 'rgba(6,182,212,0.1)', borderRadius: '50%', filter: 'blur(50px)' }}></div>
       </div>
-      
+
       <div className="ride-panel gsap-fade-up">
         {status === 'found' ? (
           <div className="text-center py-4">
-            <div style={{width: 60, height: 60, background: 'rgba(34,197,94,0.2)', borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80'}}>
+            <div style={{ width: 60, height: 60, background: 'rgba(34,197,94,0.2)', borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80' }}>
               <Car size={32} />
             </div>
-            <h3 style={{fontSize: 20, fontWeight: 'bold', marginBottom: 8}}>Driver Found!</h3>
-            <p style={{color: '#9ca3af', marginBottom: 20}}>Rajesh is 3 mins away.</p>
-            <button onClick={() => setStatus('idle')} className="btn-primary" style={{background: '#374151'}}>Cancel Ride</button>
+            <h3 style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 8 }}>Driver Found!</h3>
+            <p style={{ color: '#9ca3af', marginBottom: 20 }}>Rajesh is 3 mins away.</p>
+            <button onClick={() => setStatus('idle')} className="btn-primary" style={{ background: '#374151' }}>Cancel Ride</button>
           </div>
         ) : status === 'searching' ? (
           <div className="text-center py-8">
-            <Loader2 size={40} className="animate-spin" color="#06b6d4" style={{margin: '0 auto 16px'}} />
+            <Loader2 size={40} className="animate-spin" color="#06b6d4" style={{ margin: '0 auto 16px' }} />
             <p>Connecting to drivers...</p>
           </div>
         ) : (
           <>
-            <h2 style={{fontSize: 20, fontWeight: 'bold', marginBottom: 16}}>Where to?</h2>
-            
+            <h2 style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Where to?</h2>
+
             <div className="input-group">
               <div className="dot"></div>
-              <input value={pickup} onChange={e=>setPickup(e.target.value)} placeholder="Current Location" className="ride-input" />
+              <input value={pickup} onChange={e => setPickup(e.target.value)} placeholder="Current Location" className="ride-input" />
             </div>
             <div className="input-group">
               <div className="square"></div>
-              <input value={dropoff} onChange={e=>setDropoff(e.target.value)} placeholder="Enter Destination" className="ride-input" />
+              <input value={dropoff} onChange={e => setDropoff(e.target.value)} placeholder="Enter Destination" className="ride-input" />
             </div>
 
             <div className="vehicle-grid">
@@ -914,8 +955,8 @@ const ProfileView = ({ user }) => (
       <div className="profile-img-container">
         <img src={user?.avatar || "https://i.pravatar.cc/150?u=me"} alt="Me" className="profile-img" />
       </div>
-      <h2 style={{fontSize: 24, fontWeight: 'bold'}}>{user?.name || "Traveler"}</h2>
-      <p style={{color: '#9ca3af', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4, marginTop: 4}}>
+      <h2 style={{ fontSize: 24, fontWeight: 'bold' }}>{user?.name || "Traveler"}</h2>
+      <p style={{ color: '#9ca3af', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
         <MapPin size={12} /> {user?.location || "Global Citizen"}
       </p>
     </div>
@@ -936,37 +977,98 @@ const ProfileView = ({ user }) => (
     </div>
 
     <div className="gsap-fade-up">
-      <h3 style={{fontSize: 18, fontWeight: 'bold', marginBottom: 16}}>Past Trips</h3>
-      <div className="card" style={{padding: 16, textAlign: 'center', color: '#6b7280'}}>
+      <h3 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Past Trips</h3>
+      <div className="card" style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}>
         <p>No past trips yet. Join one today!</p>
       </div>
     </div>
   </div>
 );
 
-const CreateModal = ({ onClose, type }) => (
-  <div className="modal-overlay">
-    <div className="modal-content gsap-scale-in">
-      <button onClick={onClose} className="close-btn"><Plus size={24} style={{transform: 'rotate(45deg)'}} /></button>
-      <h2 style={{fontSize: 20, fontWeight: 'bold', marginBottom: 24}}>
-        {type === 'partner' ? 'New Trip' : 'Find Buddy'}
-      </h2>
-      <div className="form-group">
-        <label className="form-label">Destination</label>
-        <input className="form-input" placeholder="Where are you going?" />
+const CreateModal = ({ onClose, type, onSuccess, user }) => {
+  const [formData, setFormData] = useState({ origin: '', destination: '', date: '', description: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.destination || !formData.date || !formData.origin) {
+      setError('All fields are required!');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const payload = {
+        origin: formData.origin,
+        destination: formData.destination,
+        date: formData.date,
+        description: formData.description || 'No description provided',
+        hostName: user?.name || user?.username || 'Anonymous',
+        hostId: user?.id || user?._id || 'guest'
+      };
+
+      const res = await fetch(`${API_BASE_URL}/trips`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to create post');
+
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content gsap-scale-in">
+        <button onClick={onClose} className="close-btn"><Plus size={24} style={{ transform: 'rotate(45deg)' }} /></button>
+        <h2 style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 24 }}>
+          {type === 'partner' ? 'New Trip' : 'Find Buddy'}
+        </h2>
+
+        {error && (
+          <div style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: 12, borderRadius: 8, fontSize: 13, textAlign: 'center', marginBottom: 16, border: '1px solid rgba(239,68,68,0.2)' }}>            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Origin</label>
+            <input name="origin" className="form-input" placeholder="Where are you starting?" value={formData.origin} onChange={handleChange} required />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Destination</label>
+            <input name="destination" className="form-input" placeholder={type === 'partner' ? "Where are you going?" : "Where do you want to meet?"} value={formData.destination} onChange={handleChange} required />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Date</label>
+            <input name="date" type="date" className="form-input" value={formData.date} onChange={handleChange} required />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea name="description" className="form-input" style={{ height: 100, resize: 'none' }} placeholder="Details..." value={formData.description} onChange={handleChange} />
+          </div>
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? <><Loader2 className="animate-spin" size={20} /> Posting...</> : 'Post'}
+          </button>
+        </form>
       </div>
-      <div className="form-group">
-        <label className="form-label">Date</label>
-        <input type="date" className="form-input" />
-      </div>
-      <div className="form-group">
-        <label className="form-label">Description</label>
-        <textarea className="form-input" style={{height: 100, resize: 'none'}} placeholder="Details..." />
-      </div>
-      <button className="btn-primary">Post</button>
     </div>
-  </div>
-);
+  );
+};
 
 // --- Main App ---
 export default function App() {
@@ -978,6 +1080,10 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+
   useGSAP();
 
   useEffect(() => {
@@ -988,36 +1094,35 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => {
-    // Only fetch trips if user is logged in
-    if (!user) return;
+  const fetchTrips = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/trips`);
+      if (!res.ok) throw new Error('Error');
+      const data = await res.json();
+      const raw = Array.isArray(data) ? data : (data.trips || []);
 
-    const fetchTrips = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/trips`);
-        if(!res.ok) throw new Error('Error');
-        const data = await res.json();
-        const raw = Array.isArray(data) ? data : (data.trips || []);
-        
-        setTrips(raw.map(t => ({
-          id: t._id || Math.random(),
-          user: {
-            name: t.host?.username || t.host?.name || "Traveler",
-            avatar: t.host?.avatar || `https://i.pravatar.cc/150?u=${t._id}`
-          },
-          origin: t.origin,
-          destination: t.destination,
-          date: formatDate(t.startDate),
-          description: t.description || "No description.",
-          tags: t.tags || ["Travel"],
-          likes: t.travelers?.length || 0,
-          activity: "Exploring",
-          distance: "Unknown"
-        })));
-      } catch (err) { setError(err.message); } 
-      finally { setLoading(false); }
-    };
+      setTrips(raw.map(t => ({
+        id: t._id || Math.random(),
+        user: {
+          name: t.hostName || "Traveler",
+          avatar: `https://i.pravatar.cc/150?u=${t._id}`
+        },
+        origin: t.origin,
+        destination: t.destination,
+        date: formatDate(t.date),
+        description: t.description || "No description.",
+        tags: t.tags || ["Travel"],
+        likes: 0,
+        activity: "Exploring",
+        distance: "Unknown"
+      })));
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    if (!user) return;
     fetchTrips();
   }, [user]);
 
@@ -1030,6 +1135,13 @@ export default function App() {
     setCreateType(activeTab === 'companion' ? 'companion' : 'partner');
     setShowModal(true);
   };
+
+  // Filter Logic
+  const filteredTrips = trips.filter(t =>
+    (t.destination && t.destination.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (t.origin && t.origin.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   if (!user) {
     return (
@@ -1044,11 +1156,16 @@ export default function App() {
     <>
       <style>{styles}</style>
       <div className="app-container">
-        <Header />
-        
-        <div style={{minHeight: 'calc(100vh - 140px)'}}>
-          {activeTab === 'home' && <FeedView trips={trips} loading={loading} error={error} />}
-          {activeTab === 'companion' && <CompanionView companions={trips} loading={loading} />}
+        <Header
+          showSearch={showSearch}
+          setShowSearch={setShowSearch}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+
+        <div style={{ minHeight: 'calc(100vh - 140px)' }}>
+          {activeTab === 'home' && <FeedView trips={filteredTrips} loading={loading} error={error} />}
+          {activeTab === 'companion' && <CompanionView companions={filteredTrips} loading={loading} />}
           {activeTab === 'ride' && <RideView />}
           {activeTab === 'profile' && <ProfileView user={user} />}
         </div>
@@ -1059,8 +1176,8 @@ export default function App() {
           </button>
         )}
 
-        {showModal && <CreateModal onClose={()=>setShowModal(false)} type={createType} />}
-        
+        {showModal && <CreateModal onClose={() => setShowModal(false)} type={createType} onSuccess={fetchTrips} user={user} />}
+
         <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
     </>
