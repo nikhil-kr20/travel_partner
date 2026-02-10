@@ -23,7 +23,8 @@ import {
   Phone,
   Video,
   MoreVertical,
-  Globe
+  Globe,
+  ChevronDown
 } from 'lucide-react';
 
 // --- CSS Styles (No Tailwind) ---
@@ -758,6 +759,58 @@ body {
   gap: 8px; 
   align-items: center; 
 }
+
+/* --- Filter Dropdown --- */
+.filter-dropdown-container {
+  position: relative;
+  display: inline-block;
+  margin-left: auto;
+}
+
+.filter-dropdown-btn {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filter-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #1f1f1f;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  z-index: 50;
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.filter-option {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.filter-option:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.filter-option.selected {
+  color: var(--primary);
+  font-weight: 600;
+}
 `;
 
 // --- GSAP Helper ---
@@ -999,6 +1052,9 @@ const Header = ({ showSearch, setShowSearch, searchQuery, setSearchQuery, onOpen
 // --- Chat Components (Split Layout) ---
 
 const ChatsListView = ({ onSelectChat, activeChatId }) => {
+  const [filter, setFilter] = useState('All'); // 'All', 'Personal', 'Group'
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   // Mock Data needs to handle both PRIVATE and GLOBAL chats
   const chats = [
     { id: 1, type: 'private', user: { name: "Sarah Lee", avatar: "https://i.pravatar.cc/150?u=sarah" }, lastMessage: "Hey! Are you still going to Goa?", time: "2m ago", unread: 2 },
@@ -1007,13 +1063,42 @@ const ChatsListView = ({ onSelectChat, activeChatId }) => {
     { id: 102, type: 'global', name: "Manali Trekking Group", avatar: null, lastMessage: "Admin: Meeting at 6 AM.", time: "1d ago", unread: 0 },
   ];
 
+  const filteredChats = chats.filter(chat => {
+    if (filter === 'All') return true;
+    if (filter === 'Personal') return chat.type === 'private';
+    if (filter === 'Group') return chat.type === 'global';
+    return true;
+  });
+
   return (
     <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
-       <div style={{padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+       <div style={{padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
          <h2 style={{fontSize: 16, fontWeight: 'bold', margin: 0}}>Messages</h2>
+         
+         {/* Filter Dropdown */}
+         <div className="filter-dropdown-container">
+            <button className="filter-dropdown-btn" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+              {filter} <ChevronDown size={14} />
+            </button>
+            
+            {isDropdownOpen && (
+              <div className="filter-dropdown-menu">
+                {['All', 'Personal', 'Group'].map((opt) => (
+                  <div 
+                    key={opt} 
+                    className={`filter-option ${filter === opt ? 'selected' : ''}`}
+                    onClick={() => { setFilter(opt); setIsDropdownOpen(false); }}
+                  >
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            )}
+         </div>
        </div>
+       
        <div style={{flex: 1, overflowY: 'auto'}}>
-        {chats.map(chat => (
+        {filteredChats.map(chat => (
           <div 
             key={chat.id} 
             className={`chat-item ${activeChatId === chat.id ? 'active' : ''}`} 
@@ -1039,6 +1124,11 @@ const ChatsListView = ({ onSelectChat, activeChatId }) => {
             </div>
           </div>
         ))}
+        {filteredChats.length === 0 && (
+          <div style={{padding: '20px', textAlign: 'center', color: '#9ca3af', fontSize: '14px'}}>
+            No {filter !== 'All' ? filter.toLowerCase() : ''} chats found.
+          </div>
+        )}
        </div>
     </div>
   );
