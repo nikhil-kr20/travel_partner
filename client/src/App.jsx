@@ -1446,7 +1446,7 @@ const InstagramChatLayout = ({ activeChat, onSelectChat, onClearChat, userId, us
   );
 }
 
-const FeedView = ({ trips, loading, error, onJoinChat }) => {
+const FeedView = ({ trips, loading, error, onJoinChat, onViewProfile }) => {
   if (loading) return <div className="flex justify-center items-center" style={{ height: '50vh' }}><Loader2 className="animate-spin" color="#06b6d4" size={32} /></div>;
   if (error) return <div className="text-center p-4" style={{ color: '#ef4444' }}>Failed to load trips</div>;
 
@@ -1461,7 +1461,11 @@ const FeedView = ({ trips, loading, error, onJoinChat }) => {
         {trips.length > 0 ? trips.map((trip) => (
           <div key={trip.id} className="card gsap-fade-up">
             <div className="card-header">
-              <div className="user-info">
+              <div
+                className="user-info"
+                onClick={() => onViewProfile && onViewProfile(trip.user)}
+                style={{ cursor: 'pointer' }}
+              >
                 <img src={trip.user.avatar} className="avatar" onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=def'} alt="user" />
                 <div className="user-details">
                   <h3>{trip.user.name}</h3>
@@ -1521,7 +1525,7 @@ const FeedView = ({ trips, loading, error, onJoinChat }) => {
   );
 };
 
-const CompanionView = ({ companions, loading }) => {
+const CompanionView = ({ companions, loading, onViewProfile }) => {
   if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin" color="#8b5cf6" size={32} /></div>;
 
   return (
@@ -1549,7 +1553,11 @@ const CompanionView = ({ companions, loading }) => {
               <p style={{ fontStyle: 'italic', fontSize: 13, color: '#d1d5db', flexGrow: 1 }}>"{item.description}"</p>
 
               <div className="flex justify-between items-center" style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center gap-2"
+                  onClick={() => onViewProfile && onViewProfile(item.user)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <img src={item.user.avatar} className="avatar" style={{ width: 28, height: 28, border: 'none' }} alt="u" />
                   <span style={{ fontSize: 12, color: '#d1d5db' }}>{item.user.name}</span>
                 </div>
@@ -1631,7 +1639,7 @@ const RideView = () => {
   );
 };
 
-const ProfileView = ({ user }) => {
+const ProfileView = ({ user, currentUser, onMessage }) => {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -1679,9 +1687,11 @@ const ProfileView = ({ user }) => {
       console.log('Profile data received:', data);
       setProfileData(data);
 
-      // Update localStorage with fresh data
-      const updatedUser = { ...user, ...data };
-      localStorage.setItem('travel_user', JSON.stringify(updatedUser));
+      // Only update localStorage if this is the current user's profile
+      if (currentUser && (userId === currentUser._id || userId === currentUser.id)) {
+        const updatedUser = { ...currentUser, ...data };
+        localStorage.setItem('travel_user', JSON.stringify(updatedUser));
+      }
 
     } catch (error) {
       if (!error.message.includes('404')) {
@@ -1710,6 +1720,7 @@ const ProfileView = ({ user }) => {
   }
 
   const displayUser = profileData || user?.user || user;
+  const isOwnProfile = !currentUser || !displayUser || (displayUser._id === currentUser._id) || (displayUser.id === currentUser.id);
 
   return (
     <div className="view-container">
@@ -1733,6 +1744,17 @@ const ProfileView = ({ user }) => {
         <p style={{ color: '#9ca3af', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
           <MapPin size={12} /> {displayUser?.email || "No email"}
         </p>
+
+        {/* Message Button - Only visible for other users */}
+        {!isOwnProfile && (
+          <button
+            onClick={() => onMessage && onMessage(displayUser)}
+            className="btn-primary"
+            style={{ marginTop: 16, width: 'auto', padding: '8px 24px', display: 'flex', alignItems: 'center', gap: 8, margin: '16px auto 0' }}
+          >
+            <MessageCircle size={18} /> Message
+          </button>
+        )}
         {/* Debug info - remove in production */}
         <p style={{ color: '#6b7280', fontSize: 10, marginTop: 8 }}>
           ID: {displayUser?._id || displayUser?.id || 'No ID'}
@@ -2002,6 +2024,42 @@ export default function App() {
     (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  // Profile View State
+  const [viewingProfile, setViewingProfile] = useState(null);
+
+  const handleViewProfile = (profileUser) => {
+    setViewingProfile(profileUser);
+    setActiveTab('profile');
+  };
+
+  const handleMessageUser = async (targetUser) => {
+    // 1. Create/Get private chat
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/chats/private`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user._id || user.id, otherUserId: targetUser._id || targetUser.id })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        // 2. Set active chat and switch tab
+        setActiveChat({
+          id: data.chatId,
+          type: 'private',
+          participants: data.chat.participants,
+          user: targetUser // Frontend expects 'user' object for private chat header
+        });
+        setActiveTab('chat-list');
+      }
+    } catch (error) {
+      setError('Failed to start chat');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!user) {
     return (
       <>
@@ -2031,11 +2089,24 @@ export default function App() {
               loading={loading}
               error={error}
               onJoinChat={handleJoinGlobalChat}
+              onViewProfile={handleViewProfile}
             />
           )}
-          {activeTab === 'companion' && <CompanionView companions={filteredTrips} loading={loading} />}
+          {activeTab === 'companion' && (
+            <CompanionView
+              companions={filteredTrips}
+              loading={loading}
+              onViewProfile={handleViewProfile}
+            />
+          )}
           {activeTab === 'ride' && <RideView />}
-          {activeTab === 'profile' && <ProfileView user={user} />}
+          {activeTab === 'profile' && (
+            <ProfileView
+              user={viewingProfile || user}
+              currentUser={user}
+              onMessage={handleMessageUser}
+            />
+          )}
 
           {/* New Split View Logic for Chats */}
           {activeTab === 'chat-list' && (
@@ -2057,7 +2128,13 @@ export default function App() {
 
         {showModal && <CreateModal onClose={() => setShowModal(false)} type={createType} onSuccess={fetchTrips} user={user} />}
 
-        <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Navbar
+          activeTab={activeTab}
+          setActiveTab={(tab) => {
+            if (tab === 'profile') setViewingProfile(null);
+            setActiveTab(tab);
+          }}
+        />
 
       </div>
     </>
