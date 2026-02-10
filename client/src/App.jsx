@@ -14,7 +14,10 @@ import {
   Zap,
   Map as MapIcon,
   Send,
-  Loader2
+  Loader2,
+  Lock,
+  Mail,
+  ArrowRight
 } from 'lucide-react';
 
 // --- CSS Styles (No Tailwind) ---
@@ -55,6 +58,15 @@ body {
               radial-gradient(circle at bottom right, rgba(88, 28, 135, 0.2), transparent 40%);
   overflow-x: hidden;
   padding-bottom: var(--safe-bottom);
+}
+
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at center, rgba(6, 182, 212, 0.1), transparent 70%);
 }
 
 .flex { display: flex; }
@@ -500,6 +512,21 @@ body {
 }
 .form-input:focus { border-color: var(--primary); }
 
+.auth-toggle {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.auth-link {
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+  background: none;
+  border: none;
+  margin-left: 4px;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -529,12 +556,6 @@ const useGSAP = () => {
 
 const API_BASE_URL = "https://travel-partner-7gbm.onrender.com/api";
 
-const MOCK_USER = {
-  name: "You",
-  avatar: "https://i.pravatar.cc/150?u=me",
-  location: "India"
-};
-
 const RIDE_OPTIONS = [
   { id: 'auto', name: 'Auto', icon: Zap, price: '₹45', eta: '3m' },
   { id: 'bike', name: 'Moto', icon: Navigation, price: '₹25', eta: '1m' },
@@ -546,6 +567,136 @@ const formatDate = (dateString) => {
   if (!dateString) return 'TBD';
   const options = { month: 'short', day: 'numeric' };
   return new Date(dateString).toLocaleDateString('en-US', options);
+};
+
+// --- Authentication View ---
+const AuthView = ({ onLoginSuccess }) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const endpoint = isLogin ? '/auth/login' : '/auth/register';
+    const payload = isLogin 
+      ? { email: formData.email, password: formData.password }
+      : { username: formData.name, email: formData.email, password: formData.password };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.message || 'Authentication failed');
+      }
+
+      // Success - Save token/user and redirect
+      onLoginSuccess(data.user || { name: formData.name || "User" });
+
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="card gsap-fade-up" style={{maxWidth: 400, margin: '0 auto', width: '100%', padding: 32}}>
+        <div className="text-center mb-8">
+          <div className="logo-box" style={{width: 60, height: 60, margin: '0 auto 16px'}}>
+            <Navigation size={32} />
+          </div>
+          <h1 className="brand-text" style={{fontSize: 28}}>TraveLink</h1>
+          <p style={{color: '#9ca3af', marginTop: 8}}>
+            {isLogin ? "Welcome back, traveler!" : "Start your adventure today."}
+          </p>
+        </div>
+
+        {error && (
+          <div style={{background: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: 12, borderRadius: 8, fontSize: 13, textAlign: 'center', marginBottom: 16, border: '1px solid rgba(239,68,68,0.2)'}}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          {!isLogin && (
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <div className="input-group" style={{background: 'rgba(255,255,255,0.05)', marginBottom: 0}}>
+                <User size={18} color="#9ca3af" />
+                <input 
+                  name="name"
+                  type="text" 
+                  className="ride-input" 
+                  placeholder="John Doe" 
+                  value={formData.name}
+                  onChange={handleChange}
+                  required={!isLogin}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <div className="input-group" style={{background: 'rgba(255,255,255,0.05)', marginBottom: 0}}>
+              <Mail size={18} color="#9ca3af" />
+              <input 
+                name="email"
+                type="email" 
+                className="ride-input" 
+                placeholder="you@example.com" 
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <div className="input-group" style={{background: 'rgba(255,255,255,0.05)', marginBottom: 0}}>
+              <Lock size={18} color="#9ca3af" />
+              <input 
+                name="password"
+                type="password" 
+                className="ride-input" 
+                placeholder="••••••••" 
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="btn-primary" style={{marginTop: 24}} disabled={loading}>
+            {loading ? <Loader2 className="animate-spin" size={20} /> : (isLogin ? "Sign In" : "Create Account")}
+          </button>
+        </form>
+
+        <div className="auth-toggle">
+          {isLogin ? "Don't have an account?" : "Already have an account?"}
+          <button className="auth-link" onClick={() => { setIsLogin(!isLogin); setError(null); }}>
+            {isLogin ? "Sign Up" : "Sign In"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // --- Sub-Components ---
@@ -757,47 +908,38 @@ const RideView = () => {
   );
 };
 
-const ProfileView = () => (
+const ProfileView = ({ user }) => (
   <div className="view-container">
     <div className="profile-header gsap-fade-up">
       <div className="profile-img-container">
-        <img src={MOCK_USER.avatar} alt="Me" className="profile-img" />
+        <img src={user?.avatar || "https://i.pravatar.cc/150?u=me"} alt="Me" className="profile-img" />
       </div>
-      <h2 style={{fontSize: 24, fontWeight: 'bold'}}>{MOCK_USER.name}</h2>
+      <h2 style={{fontSize: 24, fontWeight: 'bold'}}>{user?.name || "Traveler"}</h2>
       <p style={{color: '#9ca3af', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4, marginTop: 4}}>
-        <MapPin size={12} /> {MOCK_USER.location}
+        <MapPin size={12} /> {user?.location || "Global Citizen"}
       </p>
     </div>
 
     <div className="stat-grid gsap-fade-up">
       <div className="stat-box">
-        <span className="stat-val">12</span>
+        <span className="stat-val">0</span>
         <span className="stat-label">Trips</span>
       </div>
       <div className="stat-box">
-        <span className="stat-val">4.8</span>
+        <span className="stat-val">5.0</span>
         <span className="stat-label">Rating</span>
       </div>
       <div className="stat-box">
-        <span className="stat-val">150</span>
+        <span className="stat-val">0</span>
         <span className="stat-label">Friends</span>
       </div>
     </div>
 
     <div className="gsap-fade-up">
       <h3 style={{fontSize: 18, fontWeight: 'bold', marginBottom: 16}}>Past Trips</h3>
-      {[1, 2].map(i => (
-        <div key={i} className="card" style={{padding: 16, display: 'flex', alignItems: 'center', gap: 16}}>
-          <div style={{width: 40, height: 40, background: '#1f2937', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af'}}>
-            <Compass size={20} />
-          </div>
-          <div>
-            <h4 style={{margin: 0, fontWeight: 500}}>Manali Trek</h4>
-            <p style={{margin: 0, fontSize: 12, color: '#6b7280'}}>Dec 2024</p>
-          </div>
-          <div style={{marginLeft: 'auto', color: '#4ade80', fontSize: 12, fontWeight: 'bold'}}>Done</div>
-        </div>
-      ))}
+      <div className="card" style={{padding: 16, textAlign: 'center', color: '#6b7280'}}>
+        <p>No past trips yet. Join one today!</p>
+      </div>
     </div>
   </div>
 );
@@ -828,16 +970,28 @@ const CreateModal = ({ onClose, type }) => (
 
 // --- Main App ---
 export default function App() {
+  const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
   const [showModal, setShowModal] = useState(false);
   const [createType, setCreateType] = useState('partner');
   const [trips, setTrips] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useGSAP();
 
   useEffect(() => {
+    // Check local storage for existing session
+    const savedUser = localStorage.getItem('travel_user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Only fetch trips if user is logged in
+    if (!user) return;
+
     const fetchTrips = async () => {
       try {
         setLoading(true);
@@ -865,12 +1019,26 @@ export default function App() {
       finally { setLoading(false); }
     };
     fetchTrips();
-  }, []);
+  }, [user]);
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    localStorage.setItem('travel_user', JSON.stringify(userData));
+  };
 
   const handleFab = () => {
     setCreateType(activeTab === 'companion' ? 'companion' : 'partner');
     setShowModal(true);
   };
+
+  if (!user) {
+    return (
+      <>
+        <style>{styles}</style>
+        <AuthView onLoginSuccess={handleLoginSuccess} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -882,7 +1050,7 @@ export default function App() {
           {activeTab === 'home' && <FeedView trips={trips} loading={loading} error={error} />}
           {activeTab === 'companion' && <CompanionView companions={trips} loading={loading} />}
           {activeTab === 'ride' && <RideView />}
-          {activeTab === 'profile' && <ProfileView />}
+          {activeTab === 'profile' && <ProfileView user={user} />}
         </div>
 
         {(activeTab === 'home' || activeTab === 'companion') && (
