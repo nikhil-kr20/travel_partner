@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   MapPin,
   Calendar,
@@ -18,7 +18,11 @@ import {
   Lock,
   Mail,
   ArrowRight,
-  X
+  X,
+  ArrowLeft,
+  Phone,
+  Video,
+  MoreVertical
 } from 'lucide-react';
 
 // --- CSS Styles (No Tailwind) ---
@@ -52,7 +56,7 @@ body {
 .app-container {
   min-height: 100vh;
   width: 100%;
-  max-width: 480px;
+  /* Removed max-width to make it full screen */
   margin: 0 auto;
   position: relative;
   background: radial-gradient(circle at top left, rgba(30, 58, 138, 0.2), transparent 40%),
@@ -66,8 +70,22 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   padding: 24px;
   background: radial-gradient(circle at center, rgba(6, 182, 212, 0.1), transparent 70%);
+}
+
+.grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+/* On mobile, revert to single column if needed, though auto-fill handles it mostly */
+@media (max-width: 480px) {
+  .grid-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .flex { display: flex; }
@@ -145,7 +163,8 @@ body {
   border-top: 1px solid var(--border-light);
   padding: 12px 24px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* Centered nav items for desktop */
+  gap: 40px;
   align-items: center;
   z-index: 100;
 }
@@ -162,6 +181,7 @@ body {
   gap: 4px;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 60px;
 }
 
 .nav-item.active {
@@ -171,15 +191,17 @@ body {
 
 /* --- Cards (Feed & Companion) --- */
 .view-container {
-  padding: 16px;
+  padding: 24px;
   animation: fadeIn 0.5s ease;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .section-title {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
-.section-title h2 { margin: 0; font-size: 24px; font-weight: 700; }
-.section-title p { margin: 4px 0 0; color: var(--text-muted); font-size: 14px; }
+.section-title h2 { margin: 0; font-size: 28px; font-weight: 700; }
+.section-title p { margin: 4px 0 0; color: var(--text-muted); font-size: 16px; }
 
 .card {
   background: var(--bg-card);
@@ -190,6 +212,9 @@ body {
   position: relative;
   overflow: hidden;
   transition: border-color 0.3s ease;
+  height: 100%; /* For grid height matching */
+  display: flex;
+  flex-direction: column;
 }
 
 .card:hover { border-color: rgba(6, 182, 212, 0.4); }
@@ -264,6 +289,7 @@ body {
   line-height: 1.5;
   color: var(--text-muted);
   margin-bottom: 16px;
+  flex-grow: 1;
 }
 
 .tag-container { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -282,6 +308,7 @@ body {
   border-radius: 24px;
   padding: 4px;
   position: relative;
+  height: 100%;
 }
 
 .companion-inner {
@@ -338,7 +365,9 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding-bottom: 100px; 
+  padding-bottom: 100px;
+  max-width: 600px; /* Limit ride width on desktop */
+  margin: 0 auto;
 }
 
 .map-placeholder {
@@ -452,7 +481,7 @@ body {
   margin-bottom: 16px;
 }
 .profile-img { width: 100%; height: 100%; border-radius: 50%; border: 4px solid black; object-fit: cover; }
-.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; max-width: 400px; margin-left: auto; margin-right: auto; }
 .stat-box { background: #111; border: 1px solid var(--border-light); border-radius: 16px; padding: 12px; text-align: center; }
 .stat-val { display: block; font-size: 20px; font-weight: 700; color: white; }
 .stat-label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
@@ -541,6 +570,168 @@ body {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* --- Split Chat Views (Instagram Style & Responsive) --- */
+.chat-split-container {
+  display: flex;
+  height: calc(100vh - 140px);
+  background: black;
+  overflow: hidden;
+  max-width: 1200px;
+  margin: 0 auto;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+}
+
+/* Default Desktop: Split View */
+.chat-sidebar {
+  width: 35%;
+  min-width: 300px;
+  border-right: 1px solid var(--border-light);
+  overflow-y: auto;
+  background: rgba(20,20,20,0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: black;
+  position: relative;
+}
+
+/* Mobile Responsive Chat Logic */
+@media (max-width: 768px) {
+  .chat-split-container {
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    height: calc(100vh - 120px);
+  }
+  
+  .chat-sidebar {
+    width: 100%;
+    border-right: none;
+    display: flex; /* Shown by default on mobile */
+  }
+
+  .chat-main-area {
+    width: 100%;
+    position: absolute;
+    top: 0; left: 0; height: 100%;
+    z-index: 50;
+    background: black;
+    display: none; /* Hidden by default on mobile */
+  }
+
+  /* When chat is active on mobile, hide list and show detail */
+  .chat-split-container.mobile-active .chat-sidebar {
+    display: none;
+  }
+  .chat-split-container.mobile-active .chat-main-area {
+    display: flex;
+  }
+}
+
+/* Visibility of Back Button: Only on Mobile */
+.mobile-back-btn {
+  display: none;
+}
+@media (max-width: 768px) {
+  .mobile-back-btn {
+    display: block;
+  }
+}
+
+.empty-chat-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  gap: 16px;
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chat-item:hover, .chat-item.active { background: rgba(255,255,255,0.08); }
+.chat-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.chat-info { flex: 1; overflow: hidden; }
+.chat-header-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.chat-name { font-weight: 600; font-size: 14px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-time { font-size: 10px; color: var(--text-muted); }
+.chat-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unread-badge { background: var(--primary); color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: auto; }
+
+.chat-detail-container { display: flex; flex-direction: column; height: 100%; background: #0a0a0a; }
+.chat-detail-header { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 12px 16px; 
+  border-bottom: 1px solid var(--border-light); 
+  background: rgba(20,20,20,0.9); 
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  height: 60px;
+}
+.chat-messages { 
+  flex: 1; 
+  overflow-y: auto; 
+  padding: 16px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
+  background-image: radial-gradient(#1f2937 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+.message-bubble { 
+  max-width: 85%; 
+  padding: 10px 14px; 
+  border-radius: 18px; 
+  font-size: 13px; 
+  line-height: 1.4; 
+  position: relative;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.message-bubble.sent { 
+  align-self: flex-end; 
+  background: var(--gradient-main); 
+  color: white; 
+  border-bottom-right-radius: 4px; 
+}
+.message-bubble.received { 
+  align-self: flex-start; 
+  background: #262626; 
+  border: 1px solid var(--border-light); 
+  color: var(--text-main); 
+  border-bottom-left-radius: 4px; 
+}
+.message-time {
+  font-size: 9px;
+  margin-top: 4px;
+  text-align: right;
+  opacity: 0.7;
+  display: block;
+}
+.chat-input-area { 
+  padding: 12px; 
+  border-top: 1px solid var(--border-light); 
+  background: #0a0a0a; 
+  display: flex; 
+  gap: 8px; 
+  align-items: center; 
 }
 `;
 
@@ -736,7 +927,7 @@ const Navbar = ({ activeTab, setActiveTab }) => {
   );
 };
 
-const Header = ({ showSearch, setShowSearch, searchQuery, setSearchQuery }) => (
+const Header = ({ showSearch, setShowSearch, searchQuery, setSearchQuery, onOpenChats }) => (
   <header className="header">
     {showSearch ? (
       <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '12px' }}>
@@ -770,7 +961,7 @@ const Header = ({ showSearch, setShowSearch, searchQuery, setSearchQuery }) => (
         </div>
         <div className="header-actions">
           <button onClick={() => setShowSearch(true)}><Search size={22} /></button>
-          <button style={{ position: 'relative' }}>
+          <button onClick={onOpenChats} style={{ position: 'relative' }}>
             <MessageCircle size={22} />
             <span style={{ position: 'absolute', top: 0, right: 0, width: 8, height: 8, background: '#ef4444', borderRadius: '50%' }}></span>
           </button>
@@ -779,6 +970,181 @@ const Header = ({ showSearch, setShowSearch, searchQuery, setSearchQuery }) => (
     )}
   </header>
 );
+
+// --- Chat Components (Split Layout) ---
+
+const ChatsListView = ({ onSelectChat, activeChatId }) => {
+  const chats = [
+    { id: 1, user: { name: "Sarah Lee", avatar: "https://i.pravatar.cc/150?u=sarah" }, lastMessage: "Hey! Are you still going to Goa?", time: "2m ago", unread: 2 },
+    { id: 2, user: { name: "Rahul Verma", avatar: "https://i.pravatar.cc/150?u=rahul" }, lastMessage: "I'll be at the meeting point.", time: "1h ago", unread: 0 },
+    { id: 3, user: { name: "Priya Singh", avatar: "https://i.pravatar.cc/150?u=priya" }, lastMessage: "Thanks for the ride!", time: "Yesterday", unread: 0 },
+    { id: 4, user: { name: "Amit K.", avatar: "https://i.pravatar.cc/150?u=amit" }, lastMessage: "Can we reschedule?", time: "Mon", unread: 0 },
+    { id: 5, user: { name: "Lisa Wong", avatar: "https://i.pravatar.cc/150?u=lisa" }, lastMessage: "Sure thing.", time: "Mon", unread: 0 },
+  ];
+
+  return (
+    <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
+       <div style={{padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+         <h2 style={{fontSize: 16, fontWeight: 'bold', margin: 0}}>Messages</h2>
+       </div>
+       <div style={{flex: 1, overflowY: 'auto'}}>
+        {chats.map(chat => (
+          <div 
+            key={chat.id} 
+            className={`chat-item ${activeChatId === chat.id ? 'active' : ''}`} 
+            onClick={() => onSelectChat(chat)}
+          >
+            <img src={chat.user.avatar} className="chat-avatar" alt={chat.user.name} />
+            <div className="chat-info">
+              <div className="chat-header-row">
+                <span className="chat-name">{chat.user.name}</span>
+                <span className="chat-time">{chat.time}</span>
+              </div>
+              <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                <span className="chat-preview">{chat.lastMessage}</span>
+                {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
+              </div>
+            </div>
+          </div>
+        ))}
+       </div>
+    </div>
+  );
+};
+
+const ChatDetailView = ({ chat, onBack }) => {
+  const [messages, setMessages] = useState([
+    { id: 1, text: "Hey! Are you still going to Goa?", sender: 'them', time: "10:30 AM" },
+    { id: 2, text: "Yes, I am! Can't wait.", sender: 'me', time: "10:32 AM" },
+    { id: 3, text: "Awesome, let's coordinate the flight.", sender: 'them', time: "10:35 AM" }
+  ]);
+  const [inputText, setInputText] = useState('');
+  const messagesEndRef = useRef(null);
+
+  // Reset messages when switching chat (Mock data reset)
+  useEffect(() => {
+    setMessages([
+        { id: 1, text: `Hey ${chat.user.name.split(' ')[0]} here!`, sender: 'them', time: "10:30 AM" },
+        { id: 2, text: "Hey! How's it going?", sender: 'me', time: "10:32 AM" }
+    ]);
+  }, [chat]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages]);
+
+  const handleSend = () => {
+    if (!inputText.trim()) return;
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setMessages([...messages, { id: Date.now(), text: inputText, sender: 'me', time: now }]);
+    setInputText('');
+  };
+
+  return (
+    <div className="chat-detail-container">
+      <div className="chat-detail-header">
+        <button className="mobile-back-btn" onClick={onBack} style={{background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: 8, marginLeft: -8}}>
+          <ArrowLeft size={24} />
+        </button>
+        <div style={{position: 'relative'}}>
+           <img src={chat.user.avatar} style={{width: 36, height: 36, borderRadius: '50%', border: '2px solid #262626'}} alt="u" />
+           <div style={{position: 'absolute', bottom: 0, right: 0, width: 8, height: 8, background: '#10b981', borderRadius: '50%', border: '1px solid #1a1a1a'}}></div>
+        </div>
+        <div style={{flex: 1}}>
+           <span style={{fontWeight: 'bold', color: 'white', display: 'block', fontSize: 14}}>{chat.user.name}</span>
+           <span style={{fontSize: 10, color: '#10b981'}}>Active Now</span>
+        </div>
+        <div style={{display: 'flex', gap: 12, color: 'white'}}>
+           <Phone size={18} />
+           <Video size={20} />
+           <MoreVertical size={18} />
+        </div>
+      </div>
+      
+      <div className="chat-messages">
+        {messages.map(msg => (
+          <div key={msg.id} className={`message-bubble ${msg.sender === 'me' ? 'sent' : 'received'}`}>
+            <div>{msg.text}</div>
+            <span className="message-time">{msg.time}</span>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="chat-input-area">
+        <button style={{background:'none', border:'none', color:'#9ca3af', padding: 4}}><Plus size={20} /></button>
+        <div style={{flex: 1, position: 'relative'}}>
+           <input 
+             value={inputText}
+             onChange={(e) => setInputText(e.target.value)}
+             placeholder="Message..."
+             className="ride-input" 
+             style={{
+               width: '100%', 
+               padding: '10px 14px', 
+               borderRadius: '24px', 
+               background: '#262626',
+               border: '1px solid #404040',
+               fontSize: '13px'
+             }}
+             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+           />
+        </div>
+        <button 
+          onClick={handleSend} 
+          className="btn-primary" 
+          style={{
+            width: 36, 
+            height: 36, 
+            padding: 0, 
+            borderRadius: '50%',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            background: inputText.trim() ? 'var(--primary)' : '#262626',
+            color: inputText.trim() ? 'white' : '#525252',
+            boxShadow: 'none'
+          }}
+          disabled={!inputText.trim()}
+        >
+          <Send size={16} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const InstagramChatLayout = ({ activeChat, onSelectChat, onClearChat }) => {
+  // Logic: 
+  // Desktop: Sidebar + (Detail OR Empty State)
+  // Mobile: If ActiveChat -> Detail (FullScreen). If Not -> Sidebar (FullScreen)
+  
+  // We use CSS classes for mobile toggling to keep DOM present but hidden
+  const containerClass = `chat-split-container gsap-fade-up ${activeChat ? 'mobile-active' : ''}`;
+
+  return (
+    <div className={containerClass}>
+      <div className="chat-sidebar">
+        <ChatsListView onSelectChat={onSelectChat} activeChatId={activeChat?.id} />
+      </div>
+      <div className="chat-main-area">
+        {activeChat ? (
+          <ChatDetailView chat={activeChat} onBack={onClearChat} />
+        ) : (
+          <div className="empty-chat-state">
+            <div style={{width: 80, height: 80, borderRadius: '50%', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+               <MessageCircle size={40} />
+            </div>
+            <h3 style={{fontSize: 18, fontWeight: 'bold'}}>Your Messages</h3>
+            <p style={{fontSize: 13, color: '#6b7280'}}>Send private photos and messages to a friend.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const FeedView = ({ trips, loading, error }) => {
   if (loading) return <div className="flex justify-center items-center" style={{ height: '50vh' }}><Loader2 className="animate-spin" color="#06b6d4" size={32} /></div>;
@@ -791,50 +1157,52 @@ const FeedView = ({ trips, loading, error }) => {
         <p>Plan your next big adventure together.</p>
       </div>
 
-      {trips.length > 0 ? trips.map((trip) => (
-        <div key={trip.id} className="card gsap-fade-up">
-          <div className="card-header">
-            <div className="user-info">
-              <img src={trip.user.avatar} className="avatar" onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=def'} alt="user" />
-              <div className="user-details">
-                <h3>{trip.user.name}</h3>
-                <p>Trip Host</p>
+      <div className="grid-layout">
+        {trips.length > 0 ? trips.map((trip) => (
+          <div key={trip.id} className="card gsap-fade-up">
+            <div className="card-header">
+              <div className="user-info">
+                <img src={trip.user.avatar} className="avatar" onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=def'} alt="user" />
+                <div className="user-details">
+                  <h3>{trip.user.name}</h3>
+                  <p>Trip Host</p>
+                </div>
+              </div>
+              <span className="like-badge">{trip.likes || 0} Likes</span>
+            </div>
+
+            <div className="trip-route">
+              <div className="route-point">
+                <div className="label">Origin</div>
+                <div className="value">{trip.origin || "Anywhere"}</div>
+              </div>
+              <div className="route-line">
+                <div className="line"></div>
+                <Car size={16} className="car-icon" />
+              </div>
+              <div className="route-point right">
+                <div className="label">Dest</div>
+                <div className="value">{trip.destination}</div>
               </div>
             </div>
-            <span className="like-badge">{trip.likes || 0} Likes</span>
-          </div>
 
-          <div className="trip-route">
-            <div className="route-point">
-              <div className="label">Origin</div>
-              <div className="value">{trip.origin || "Anywhere"}</div>
+            <div className="trip-meta">
+              <Calendar size={14} color="#06b6d4" />
+              <span>{trip.date}</span>
             </div>
-            <div className="route-line">
-              <div className="line"></div>
-              <Car size={16} className="car-icon" />
-            </div>
-            <div className="route-point right">
-              <div className="label">Dest</div>
-              <div className="value">{trip.destination}</div>
+
+            <p className="trip-desc">{trip.description}</p>
+
+            <div className="tag-container">
+              {trip.tags && trip.tags.map((tag, idx) => (
+                <span key={idx} className="tag">#{tag}</span>
+              ))}
             </div>
           </div>
-
-          <div className="trip-meta">
-            <Calendar size={14} color="#06b6d4" />
-            <span>{trip.date}</span>
-          </div>
-
-          <p className="trip-desc">{trip.description}</p>
-
-          <div className="tag-container">
-            {trip.tags && trip.tags.map((tag, idx) => (
-              <span key={idx} className="tag">#{tag}</span>
-            ))}
-          </div>
-        </div>
-      )) : (
-        <div className="text-center text-gray-500 py-10">No trips found.</div>
-      )}
+        )) : (
+          <div className="text-center text-gray-500 py-10 w-full col-span-full">No trips found.</div>
+        )}
+      </div>
     </div>
   );
 };
@@ -849,7 +1217,7 @@ const CompanionView = ({ companions, loading }) => {
         <p>Find someone nearby.</p>
       </div>
 
-      <div className="flex-col gap-4">
+      <div className="grid-layout">
         {companions.length > 0 ? companions.map((item) => (
           <div key={item.id} className="companion-card gsap-fade-up">
             <div className="companion-inner">
@@ -876,7 +1244,7 @@ const CompanionView = ({ companions, loading }) => {
             </div>
           </div>
         )) : (
-          <div className="text-center text-gray-500 py-10">No companions found matching your search.</div>
+          <div className="text-center text-gray-500 py-10 w-full col-span-full">No companions found matching your search.</div>
         )}
       </div>
     </div>
@@ -1084,6 +1452,9 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
 
+  // Chat State
+  const [activeChat, setActiveChat] = useState(null);
+
   useGSAP();
 
   useEffect(() => {
@@ -1156,11 +1527,13 @@ export default function App() {
     <>
       <style>{styles}</style>
       <div className="app-container">
+        
         <Header
           showSearch={showSearch}
           setShowSearch={setShowSearch}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          onOpenChats={() => setActiveTab('chat-list')}
         />
 
         <div style={{ minHeight: 'calc(100vh - 140px)' }}>
@@ -1168,6 +1541,15 @@ export default function App() {
           {activeTab === 'companion' && <CompanionView companions={filteredTrips} loading={loading} />}
           {activeTab === 'ride' && <RideView />}
           {activeTab === 'profile' && <ProfileView user={user} />}
+          
+          {/* New Split View Logic for Chats */}
+          {activeTab === 'chat-list' && (
+            <InstagramChatLayout 
+              activeChat={activeChat} 
+              onSelectChat={setActiveChat} 
+              onClearChat={() => setActiveChat(null)}
+            />
+          )}
         </div>
 
         {(activeTab === 'home' || activeTab === 'companion') && (
@@ -1179,6 +1561,7 @@ export default function App() {
         {showModal && <CreateModal onClose={() => setShowModal(false)} type={createType} onSuccess={fetchTrips} user={user} />}
 
         <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+        
       </div>
     </>
   );
