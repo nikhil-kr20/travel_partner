@@ -5,19 +5,21 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '0.0.0.0', // Allow access from network
+    host: '0.0.0.0',
     port: 5173,
     strictPort: true,
+    // Handles SPA routing — every 404 falls back to index.html
+    historyApiFallback: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
       '/socket.io': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:5000',
         ws: true,
         changeOrigin: true,
       },
     },
-  }
+  },
 })

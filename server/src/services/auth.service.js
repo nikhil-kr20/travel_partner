@@ -38,13 +38,19 @@ class AuthService {
     }
 
     /**
-     * Login a user with email + password.
+     * Login a user with email + password + role.
      */
-    async login({ email, password }) {
+    async login({ email, password, role }) {
         const user = await User.findOne({ email }).select("+password +refreshToken");
         if (!user || !(await user.comparePassword(password))) {
             const err = new Error("Invalid email or password.");
             err.statusCode = 401;
+            throw err;
+        }
+
+        if (role && user.role !== role) {
+            const err = new Error(`Account exists as a ${user.role}, but you are trying to log in as a ${role}.`);
+            err.statusCode = 403;
             throw err;
         }
 

@@ -27,8 +27,8 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
-        const { user, accessToken, refreshToken } = await authService.login({ email, password });
+        const { email, password, role } = req.body;
+        const { user, accessToken, refreshToken } = await authService.login({ email, password, role });
         res.cookie("refreshToken", refreshToken, cookieOptions);
         sendSuccess(res, {
             message: "Logged in successfully.",
