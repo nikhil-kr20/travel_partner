@@ -94,4 +94,67 @@ export const globalStyles = `
   .error-banner { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 16px; font-size: 0.9rem; }
   .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
   .typing-indicator { font-size: 0.8rem; color: var(--text-muted); font-style: italic; padding: 0 24px 8px; }
+
+  /* =========================================
+     MOBILE RESPONSIVENESS
+     ========================================= */
+  @media (max-width: 768px) {
+    /* Layout */
+    .app-layout { flex-direction: column; }
+    
+    /* Turn Sidebar into Bottom Top Navigation */
+    .sidebar { 
+      order: 2; width: 100%; height: 64px; padding: 0; 
+      border-right: none; border-top: 1px solid var(--border); 
+      flex-direction: row; position: fixed; bottom: 0; left: 0; z-index: 50; 
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+    }
+    .sidebar .logo, .sidebar > div:last-child { display: none; }
+    
+    .nav-menu { flex-direction: row; width: 100%; justify-content: space-around; align-items: center; margin: 0; gap: 0; }
+    .nav-menu > a { flex: 1; text-align: center; display: block; }
+    .nav-menu > div { display: none; } /* hide divider */
+    
+    .nav-item { flex-direction: column; gap: 4px; padding: 6px 0; border-radius: 0; }
+    .nav-item span:not(.badge) { font-size: 0.65rem; text-align: center; }
+    .nav-item.active { background: transparent; color: var(--primary); box-shadow: none; border-top: 2px solid var(--primary); }
+    .nav-item .badge { top: 0; right: 25%; }
+    
+    /* Main Content */
+    .main-content { order: 1; height: calc(100vh - 64px); }
+    .top-header { padding: 0 16px; height: 60px; }
+    .search-bar { width: auto; flex: 1; margin-right: 12px; font-size: 0.9rem; padding: 8px 12px; }
+    .header-actions { gap: 12px; }
+    
+    .page-content { padding: 16px; padding-bottom: 24px; }
+    
+    /* Grids */
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; gap: 16px; }
+    
+    /* Hero Section */
+    .hero { padding: 32px 16px; text-align: center; margin-bottom: 20px; }
+    .hero h1 { font-size: 1.75rem; }
+    .hero p { font-size: 1rem; margin-bottom: 24px; }
+    .hero > div > div { justify-content: center; flex-direction: column; gap: 12px; width: 100%; }
+    .hero > div > div button { width: 100%; }
+    .hero-circles { width: 300px; height: 300px; right: -50%; top: -20%; }
+    
+    /* Chat Layout */
+    .chat-layout { margin: 0; border-radius: var(--radius-md); height: calc(100vh - 60px - 64px - 32px); border: 1px solid var(--border); flex-direction: column; }
+    .chat-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); height: 35%; flex: none; }
+    .chat-main { width: 100%; flex: 1; height: 65%; }
+    .message { max-width: 85%; padding: 10px 14px; font-size: 0.95rem; }
+    .chat-header { padding: 12px 16px; }
+    .chat-input-area { padding: 12px; }
+    
+    /* Forms & Cards */
+    .booking-form form { grid-template-columns: 1fr !important; gap: 12px !important; }
+    .booking-form button { width: 100%; }
+    
+    .auth-card { padding: 24px; margin: 16px; }
+    .card { padding: 16px; }
+    
+    /* Ride Cards Fix */
+    div[style*="flex-direction: row"] { flex-wrap: wrap; }
+  }
 `;
