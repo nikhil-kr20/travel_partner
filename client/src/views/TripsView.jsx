@@ -44,15 +44,21 @@ function TripCard({ trip, onJoin, currentUserId }) {
 }
 
 function CreateTripModal({ onClose, onCreated }) {
-    const [form, setForm] = useState({ fromLocation: '', toLocation: '', date: '', transportMode: 'Train', seatsAvailable: 1, description: '' });
+    const [form, setForm] = useState({ fromLocation: '', toLocation: '', date: '', transportMode: 'train', seatsAvailable: 1, description: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const set = f => e => setForm(p => ({ ...p, [f]: e.target.value }));
 
     const handleSubmit = async (e) => {
         e.preventDefault(); setLoading(true); setError('');
-        try { const trip = await createTrip(form); onCreated(trip); onClose(); }
-        catch (err) { setError(err.response?.data?.message || 'Failed to create trip.'); }
+        try {
+            const payload = { ...form, seatsAvailable: Number(form.seatsAvailable) };
+            const trip = await createTrip(payload); onCreated(trip); onClose();
+        }
+        catch (err) {
+            const detail = err.response?.data?.errors?.join(' | ');
+            setError(detail || err.response?.data?.message || 'Failed to create trip.');
+        }
         finally { setLoading(false); }
     };
 
@@ -68,7 +74,7 @@ function CreateTripModal({ onClose, onCreated }) {
                     <div className="form-group">
                         <label>Transport Mode</label>
                         <select className="form-control" value={form.transportMode} onChange={set('transportMode')}>
-                            {['Train', 'Bus', 'Flight', 'Car', 'Bike', 'Other'].map(m => <option key={m}>{m}</option>)}
+                            {['Train', 'Bus', 'Flight', 'Car', 'Bike', 'Other'].map(m => <option key={m} value={m.toLowerCase()}>{m}</option>)}
                         </select>
                     </div>
                     <div className="form-group"><label>Seats Available</label><input type="number" className="form-control" min="1" max="20" value={form.seatsAvailable} onChange={set('seatsAvailable')} /></div>
