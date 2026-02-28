@@ -26,12 +26,18 @@ app.use(helmet());
 const corsOptions = {
     origin: (origin, callback) => {
         const allowed = (process.env.CLIENT_URL || "").split(",").map((o) => o.trim());
-        // Allow requests with no origin (mobile apps, Postman, etc.)
-        if (!origin || allowed.includes("*") || allowed.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error(`CORS: origin '${origin}' not allowed`));
-        }
+        // Allow requests with no origin (mobile apps, Postman, curl, etc.)
+        if (!origin) return callback(null, true);
+        // Allow wildcard
+        if (allowed.includes("*")) return callback(null, true);
+        // Allow explicit origins from CLIENT_URL env var
+        if (allowed.includes(origin)) return callback(null, true);
+        // Allow ALL Vercel preview & production deployments automatically
+        if (origin.endsWith(".vercel.app")) return callback(null, true);
+        // Allow localhost for development
+        if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return callback(null, true);
+
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
     },
     credentials: true,
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
