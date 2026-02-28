@@ -4,15 +4,26 @@ import { getMyRides, createRide } from '../services/ride.service.js';
 import { getRideBookings, acceptBooking, completeBooking } from '../services/booking.service.js';
 
 function CreateRideModal({ onClose, onCreated }) {
-    const [form, setForm] = useState({ fromLocation: '', toLocation: '', date: '', vehicleType: 'Car', vehicleNumber: '', availableSeats: 1, pricePerKm: 10, estimatedDistance: 10 });
+    const [form, setForm] = useState({ fromLocation: '', toLocation: '', date: '', vehicleType: 'car', vehicleNumber: '', availableSeats: 1, pricePerKm: 10, estimatedDistance: 10 });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const set = f => e => setForm(p => ({ ...p, [f]: e.target.value }));
 
     const handleSubmit = async (e) => {
         e.preventDefault(); setLoading(true); setError('');
-        try { const ride = await createRide(form); onCreated(ride); onClose(); }
-        catch (err) { setError(err.response?.data?.message || 'Failed to create ride.'); }
+        try {
+            const payload = {
+                ...form,
+                availableSeats: Number(form.availableSeats),
+                pricePerKm: Number(form.pricePerKm),
+                estimatedDistance: Number(form.estimatedDistance),
+            };
+            const ride = await createRide(payload); onCreated(ride); onClose();
+        }
+        catch (err) {
+            const detail = err.response?.data?.errors?.join(' | ');
+            setError(detail || err.response?.data?.message || 'Failed to create ride.');
+        }
         finally { setLoading(false); }
     };
 
@@ -28,7 +39,7 @@ function CreateRideModal({ onClose, onCreated }) {
                     <div className="form-group">
                         <label>Vehicle Type</label>
                         <select className="form-control" value={form.vehicleType} onChange={set('vehicleType')}>
-                            {['Car', 'Bike', 'Auto', 'Van', 'Bus'].map(v => <option key={v}>{v}</option>)}
+                            {['Car', 'Bike', 'Auto', 'Van', 'Bus'].map(v => <option key={v} value={v.toLowerCase()}>{v}</option>)}
                         </select>
                     </div>
                     <div className="form-group"><label>Vehicle Number</label><input className="form-control" required value={form.vehicleNumber} onChange={set('vehicleNumber')} placeholder="MH01AB1234" /></div>
