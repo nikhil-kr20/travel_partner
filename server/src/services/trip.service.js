@@ -72,8 +72,8 @@ class TripService {
      */
     async getTripById(tripId) {
         const trip = await Trip.findById(tripId)
-            .populate("creator", "name profileImage rating bio")
-            .populate("participants", "name profileImage rating");
+            .populate("creator", "name username profileImage rating bio")
+            .populate("participants", "name username profileImage rating");
 
         if (!trip) {
             const err = new Error("Trip not found.");
@@ -208,6 +208,18 @@ class TripService {
         await trip.save();
         logger.info(`Trip ${tripId} cancelled by user ${userId}`);
         return trip;
+    }
+
+    /**
+     * Get trips created by a specific user (for public profile).
+     */
+    async getTripsByUserId(userId, limit = 6) {
+        const trips = await Trip.find({ creator: userId, status: { $ne: "cancelled" } })
+            .populate("creator", "name username profileImage")
+            .sort({ date: -1 })
+            .limit(parseInt(limit))
+            .lean();
+        return trips;
     }
 
     /**

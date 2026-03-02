@@ -4,15 +4,17 @@ import { Home, Car, MessageSquare, User, Search, Bell, Compass, MapPin } from 'l
 import { useAuth } from './context/AuthContext.jsx';
 import { globalStyles } from './styles/globalStyles.js';
 
-import LoginView          from './views/LoginView.jsx';
-import SignupView         from './views/SignupView.jsx';
-import DashboardView      from './views/DashboardView.jsx';
-import TripsView          from './views/TripsView.jsx';
-import RidesView          from './views/RidesView.jsx';
-import ChatView           from './views/ChatView.jsx';
-import ProfileView        from './views/ProfileView.jsx';
+import LoginView from './views/LoginView.jsx';
+import SignupView from './views/SignupView.jsx';
+import DashboardView from './views/DashboardView.jsx';
+import TripsView from './views/TripsView.jsx';
+import TripDetailView from './views/TripDetailView.jsx';
+import RidesView from './views/RidesView.jsx';
+import ChatView from './views/ChatView.jsx';
+import ProfileView from './views/ProfileView.jsx';
+import PublicProfileView from './views/PublicProfileView.jsx';
 import DriverDashboardView from './views/DriverDashboardView.jsx';
-import DriverRidesView    from './views/DriverRidesView.jsx';
+import DriverRidesView from './views/DriverRidesView.jsx';
 
 // ─── Loading Spinner ──────────────────────────────────────────
 function Spinner() {
@@ -32,7 +34,7 @@ function ProtectedRoute({ children, userOnly = false, riderOnly = false }) {
   const location = useLocation();
   if (loading) return <Spinner />;
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (userOnly  && user.role === 'rider') return <Navigate to="/dashboard" replace />;
+  if (userOnly && user.role === 'rider') return <Navigate to="/dashboard" replace />;
   if (riderOnly && user.role !== 'rider') return <Navigate to="/dashboard" replace />;
   return children;
 }
@@ -82,14 +84,14 @@ function Shell({ children, noPadding = false }) {
         </div>
 
         <nav className="nav-menu">
-          <NavItem icon={<Home size={20} />}        label="Dashboard" to="/dashboard" />
+          <NavItem icon={<Home size={20} />} label="Dashboard" to="/dashboard" />
           {!isRider && (
-            <NavItem icon={<MapPin size={20} />}    label="Trips"     to="/trips" />
+            <NavItem icon={<MapPin size={20} />} label="Trips" to="/trips" />
           )}
-          <NavItem icon={<Car size={20} />}         label={isRider ? 'My Rides' : 'Book Ride'} to="/rides" />
+          <NavItem icon={<Car size={20} />} label={isRider ? 'My Rides' : 'Book Ride'} to="/rides" />
           <NavItem icon={<MessageSquare size={20} />} label="Messages" to="/chat" badge={unreadCount || null} />
           <div style={{ margin: '20px 0', borderBottom: '1px solid var(--border)' }} />
-          <NavItem icon={<User size={20} />}        label="Profile"   to="/profile" />
+          <NavItem icon={<User size={20} />} label="Profile" to="/profile" />
         </nav>
 
         <div style={{ marginTop: 'auto', padding: '20px 0' }}>
@@ -115,7 +117,7 @@ function Shell({ children, noPadding = false }) {
             <div className="user-avatar" onClick={() => navigate('/profile')} title="Profile">
               {user.profileImage?.url
                 ? <img src={user.profileImage.url} alt={user.name}
-                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                 : user.name.charAt(0).toUpperCase()}
             </div>
           </div>
@@ -158,7 +160,7 @@ export default function App() {
 
       <Routes>
         {/* ── Guest routes ────────────────────────────── */}
-        <Route path="/login"    element={<GuestRoute><LoginView /></GuestRoute>} />
+        <Route path="/login" element={<GuestRoute><LoginView /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><SignupView /></GuestRoute>} />
 
         {/* ── Protected routes (inside shell) ─────────── */}
@@ -171,6 +173,18 @@ export default function App() {
         <Route path="/trips" element={
           <ProtectedRoute userOnly>
             <Shell><TripsView /></Shell>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/trips/:id" element={
+          <ProtectedRoute>
+            <Shell><TripDetailView /></Shell>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/user/:username" element={
+          <ProtectedRoute>
+            <Shell><PublicProfileView /></Shell>
           </ProtectedRoute>
         } />
 
@@ -193,8 +207,8 @@ export default function App() {
         } />
 
         {/* ── Fallback ─────────────────────────────────── */}
-        <Route path="/"  element={<Navigate to="/dashboard" replace />} />
-        <Route path="*"  element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>
   );

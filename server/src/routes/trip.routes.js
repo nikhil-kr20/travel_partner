@@ -14,6 +14,7 @@ router.route("/")
     .post(validate(schema.createTrip), controller.createTrip);
 
 router.get("/my", controller.getMyTrips);
+router.get("/by-user/:userId", controller.getTripsByUser);
 
 router.route("/:id")
     .get(controller.getTripById)

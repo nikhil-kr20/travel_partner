@@ -17,3 +17,6 @@ export const uploadAvatar = (file) => {
 
 export const getUserById = (id) =>
     api.get(`/v1/auth/users/${id}`).then((r) => r.data.data.user);
+
+export const getPublicProfile = (username) =>
+    api.get(`/v1/auth/users/profile/${username}`).then((r) => r.data.data.user);

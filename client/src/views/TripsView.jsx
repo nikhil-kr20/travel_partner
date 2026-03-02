@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, User, Plus, MoreVertical } from 'lucide-react';
+import { MapPin, Calendar, User, Plus, MoreVertical, Eye } from 'lucide-react';
 import { getTrips, createTrip, joinTrip } from '../services/trip.service.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useNavigate } from 'react-router-dom';
 
 function TripCard({ trip, onJoin, currentUserId }) {
     const [joining, setJoining] = useState(false);
+    const navigate = useNavigate();
     const isCreator = trip.creator?._id === currentUserId || trip.creator === currentUserId;
     const isParticipant = trip.participants?.some(p => (p._id || p) === currentUserId);
 
@@ -31,14 +33,21 @@ function TripCard({ trip, onJoin, currentUserId }) {
                 <div className="meta-item"><Calendar size={16} /> {new Date(trip.date).toLocaleDateString()}</div>
                 <div className="meta-item" style={{ marginLeft: 'auto' }}><User size={16} /> {trip.seatsAvailable} seats</div>
             </div>
+            <button
+                className="btn btn-outline"
+                style={{ marginTop: '12px', width: '100%', justifyContent: 'center' }}
+                onClick={() => navigate(`/trips/${trip._id}`)}
+            >
+                <Eye size={16} /> View Details
+            </button>
             {!isCreator && !isParticipant && trip.status === 'open' && (
-                <button className="btn btn-primary" style={{ marginTop: '16px', width: '100%', justifyContent: 'center' }}
+                <button className="btn btn-primary" style={{ marginTop: '8px', width: '100%', justifyContent: 'center' }}
                     onClick={handleJoin} disabled={joining}>
                     {joining ? 'Joining...' : 'Join Trip'}
                 </button>
             )}
-            {isCreator && <span className="status-badge status-active" style={{ marginTop: '16px', textAlign: 'center' }}>Your Trip</span>}
-            {isParticipant && !isCreator && <span className="status-badge status-active" style={{ marginTop: '16px', textAlign: 'center' }}>Joined</span>}
+            {isCreator && <span className="status-badge status-active" style={{ marginTop: '8px', textAlign: 'center' }}>Your Trip</span>}
+            {isParticipant && !isCreator && <span className="status-badge status-active" style={{ marginTop: '8px', textAlign: 'center' }}>Joined</span>}
         </div>
     );
 }

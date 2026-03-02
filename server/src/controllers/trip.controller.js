@@ -58,4 +58,11 @@ const getMyTrips = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-module.exports = { createTrip, getTrips, getTripById, joinTrip, leaveTrip, updateTrip, cancelTrip, getMyTrips };
+const getTripsByUser = async (req, res, next) => {
+    try {
+        const trips = await tripService.getTripsByUserId(req.params.userId);
+        sendSuccess(res, { data: { trips } });
+    } catch (err) { next(err); }
+};
+
+module.exports = { createTrip, getTrips, getTripById, joinTrip, leaveTrip, updateTrip, cancelTrip, getMyTrips, getTripsByUser };

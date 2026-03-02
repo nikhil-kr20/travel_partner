@@ -18,3 +18,6 @@ export const markRead = (chatId) =>
 
 export const deleteMessage = (messageId) =>
     api.delete(`/v1/chats/messages/${messageId}`).then((r) => r.data);
+
+export const joinTripGroupChat = (tripId) =>
+    api.post(`/v1/chats/trip/${tripId}/join`).then((r) => r.data.data.chat);

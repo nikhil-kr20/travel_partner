@@ -69,12 +69,6 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// ─── Auth Rate Limiting (stricter) ───────────────────────────
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 20,
-    message: { success: false, message: "Too many auth attempts. Please wait 15 minutes." },
-});
 
 // ─── Health Check ────────────────────────────────────────────
 app.get("/health", (req, res) => {
@@ -87,14 +81,14 @@ app.get("/health", (req, res) => {
 });
 
 // ─── API Routes (versioned) ──────────────────────────────────
-app.use("/api/v1/auth", authLimiter, authRoutes);
+app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/trips", tripRoutes);
 app.use("/api/v1/rides", rideRoutes);
 app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/chats", chatRoutes);
 
 // Legacy aliases (non-versioned, for backwards compat)
-app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/rides", rideRoutes);
 app.use("/api/bookings", bookingRoutes);

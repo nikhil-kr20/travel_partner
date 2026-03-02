@@ -100,4 +100,13 @@ const getUserById = async (req, res, next) => {
     }
 };
 
-module.exports = { register, login, logout, refreshToken, getMe, updateProfile, uploadProfileImage, getUserById };
+const getPublicProfile = async (req, res, next) => {
+    try {
+        const user = await authService.getPublicProfileByUsername(req.params.username);
+        sendSuccess(res, { data: { user } });
+    } catch (err) {
+        next(err);
+    }
+};
+
+module.exports = { register, login, logout, refreshToken, getMe, updateProfile, uploadProfileImage, getUserById, getPublicProfile };

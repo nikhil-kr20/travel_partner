@@ -68,4 +68,11 @@ const sendMediaMessage = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-module.exports = { getChats, getChatById, createPersonalChat, getMessages, markRead, deleteMessage, sendMediaMessage };
+const joinTripGroupChat = async (req, res, next) => {
+    try {
+        const chat = await chatService.joinTripGroupChat(req.params.tripId, req.user._id);
+        sendSuccess(res, { message: "Joined group chat.", data: { chat } });
+    } catch (err) { next(err); }
+};
+
+module.exports = { getChats, getChatById, createPersonalChat, getMessages, markRead, deleteMessage, sendMediaMessage, joinTripGroupChat };

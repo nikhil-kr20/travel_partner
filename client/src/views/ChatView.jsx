@@ -3,6 +3,7 @@ import { Search, Send, Plus, MoreVertical, Compass } from 'lucide-react';
 import { getChats, getMessages, markRead } from '../services/chat.service.js';
 import { getSocket } from '../lib/socket.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useLocation } from 'react-router-dom';
 
 function formatTime(ts) {
     if (!ts) return '';
@@ -17,8 +18,9 @@ function formatTime(ts) {
 
 export default function ChatView({ onUnreadChange }) {
     const { user } = useAuth();
+    const location = useLocation();
     const [chats, setChats] = useState([]);
-    const [activeChatId, setActiveChatId] = useState(null);
+    const [activeChatId, setActiveChatId] = useState(location.state?.activeChatId || null);
     const [messages, setMessages] = useState([]);
     const [msgText, setMsgText] = useState('');
     const [filter, setFilter] = useState('all');

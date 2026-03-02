@@ -113,6 +113,21 @@ class AuthService {
     }
 
     /**
+     * Get public profile of a user by username (safe fields only).
+     */
+    async getPublicProfileByUsername(username) {
+        const user = await User.findOne({ username }).select(
+            "username name profileImage bio rating createdAt"
+        );
+        if (!user) {
+            const err = new Error("User not found.");
+            err.statusCode = 404;
+            throw err;
+        }
+        return user;
+    }
+
+    /**
      * Get current user profile.
      */
     async getMe(userId) {

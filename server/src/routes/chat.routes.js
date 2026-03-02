@@ -15,6 +15,9 @@ router.get("/", controller.getChats);
 // Create personal chat
 router.post("/personal", validate(schema.createPersonalChat), controller.createPersonalChat);
 
+// Join a trip's group chat
+router.post("/trip/:tripId/join", controller.joinTripGroupChat);
+
 // Get specific chat
 router.get("/:chatId", controller.getChatById);
 

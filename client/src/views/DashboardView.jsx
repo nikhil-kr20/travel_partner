@@ -3,8 +3,10 @@ import { MapPin, Car, Calendar, User, Plus, Search, Star, Clock, ChevronRight, M
 import { useAuth } from '../context/AuthContext.jsx';
 import { getTrips } from '../services/trip.service.js';
 import { getRides } from '../services/ride.service.js';
+import { useNavigate } from 'react-router-dom';
 
 function TripCard({ trip }) {
+    const navigate = useNavigate();
     const defaultImg = 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=600&q=80';
     return (
         <div className="card">
@@ -21,7 +23,7 @@ function TripCard({ trip }) {
                 <div className="meta-item"><Calendar size={16} /> {new Date(trip.date).toLocaleDateString()}</div>
                 <div className="meta-item" style={{ marginLeft: 'auto' }}><User size={16} /> {trip.seatsAvailable} seats</div>
             </div>
-            <button className="btn btn-outline" style={{ marginTop: '20px', width: '100%', justifyContent: 'center' }}>View Details</button>
+            <button className="btn btn-outline" style={{ marginTop: '20px', width: '100%', justifyContent: 'center' }} onClick={() => navigate(`/trips/${trip._id}`)}>View Details</button>
         </div>
     );
 }

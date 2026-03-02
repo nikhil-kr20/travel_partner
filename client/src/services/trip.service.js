@@ -21,3 +21,6 @@ export const leaveTrip = (id) =>
 
 export const cancelTrip = (id) =>
     api.patch(`/v1/trips/${id}/cancel`).then((r) => r.data.data.trip);
+
+export const getTripsByUser = (userId) =>
+    api.get(`/v1/trips/by-user/${userId}`).then((r) => r.data.data.trips);

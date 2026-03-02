@@ -19,7 +19,9 @@ router.get("/me", controller.getMe);
 router.patch("/me", validate(schema.updateProfile), controller.updateProfile);
 router.patch("/me/avatar", upload.single("avatar"), controller.uploadProfileImage);
 
-// Get any public user profile
+// Get any public user profile by ID
 router.get("/users/:id", controller.getUserById);
+// Get any public user profile by username
+router.get("/users/profile/:username", controller.getPublicProfile);
 
 module.exports = router;

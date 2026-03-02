@@ -154,6 +154,36 @@ class ChatService {
     }
 
     /**
+     * Join a trip group chat (adds user as participant if not already).
+     */
+    async joinTripGroupChat(tripId, userId) {
+        const Trip = require("../models/Trip");
+        const trip = await Trip.findById(tripId);
+        if (!trip) {
+            const err = new Error("Trip not found.");
+            err.statusCode = 404;
+            throw err;
+        }
+        if (!trip.chatId) {
+            const err = new Error("This trip has no group chat.");
+            err.statusCode = 404;
+            throw err;
+        }
+        const chat = await Chat.findByIdAndUpdate(
+            trip.chatId,
+            { $addToSet: { participants: userId } },
+            { new: true }
+        ).populate("participants", "name profileImage").populate("lastMessage");
+
+        if (!chat) {
+            const err = new Error("Group chat not found.");
+            err.statusCode = 404;
+            throw err;
+        }
+        return chat;
+    }
+
+    /**
      * Delete a message (soft delete, sender only).
      */
     async deleteMessage(messageId, userId) {
