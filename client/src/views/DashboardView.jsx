@@ -21,7 +21,6 @@ function TripCard({ trip }) {
             </div>
             <div className="meta-info" style={{ borderTop: 'none', paddingTop: '8px', marginTop: '0' }}>
                 <div className="meta-item"><Calendar size={16} /> {new Date(trip.date).toLocaleDateString()}</div>
-                <div className="meta-item" style={{ marginLeft: 'auto' }}><User size={16} /> {trip.seatsAvailable} seats</div>
             </div>
             <button className="btn btn-outline" style={{ marginTop: '20px', width: '100%', justifyContent: 'center' }} onClick={() => navigate(`/trips/${trip._id}`)}>View Details</button>
         </div>

@@ -20,8 +20,6 @@ router.route("/:id")
     .get(controller.getTripById)
     .patch(validate(schema.updateTrip), controller.updateTrip);
 
-router.post("/:id/join", controller.joinTrip);
-router.post("/:id/leave", controller.leaveTrip);
 router.patch("/:id/cancel", controller.cancelTrip);
 
 module.exports = router;

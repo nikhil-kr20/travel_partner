@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-    MapPin, Calendar, Users, ArrowLeft, MessageCircle, Lock,
+    MapPin, Calendar, ArrowLeft, MessageCircle, Lock,
     Globe, Train, Car, Bus, Plane, Bike, Copy, CheckCheck,
     User, Loader2
 } from 'lucide-react';
@@ -166,286 +166,214 @@ export default function TripDetailView() {
                             {transportIcon}
                             {trip.transportMode?.charAt(0).toUpperCase() + trip.transportMode?.slice(1)}
                         </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Users size={16} />
-                            {trip.participants?.length || 1} / {trip.seatsAvailable} seats
-                        </span>
                     </div>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px', alignItems: 'start' }}>
-                {/* Left column */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-                    {/* Locations */}
-                    <div className="card" style={{ gap: '16px' }}>
-                        <h3 style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <MapPin size={18} color="var(--primary)" /> Route
-                        </h3>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{
-                                    width: '48px', height: '48px', borderRadius: '50%',
-                                    background: 'var(--primary-light)', display: 'flex',
-                                    alignItems: 'center', justifyContent: 'center', color: 'var(--primary)',
-                                    margin: '0 auto 6px', fontWeight: 700, fontSize: '0.75rem'
-                                }}>FROM</div>
-                                <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{trip.fromLocation}</p>
-                            </div>
-                            <div style={{ flex: 1, borderTop: '2px dashed var(--border)', position: 'relative' }}>
-                                <div style={{
-                                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                                    background: 'white', padding: '4px 10px', borderRadius: '20px',
-                                    border: '1px solid var(--border)', fontSize: '0.8rem', color: 'var(--text-muted)',
-                                    display: 'flex', alignItems: 'center', gap: '4px'
-                                }}>
-                                    {transportIcon}
-                                </div>
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{
-                                    width: '48px', height: '48px', borderRadius: '50%',
-                                    background: '#fef3c7', display: 'flex',
-                                    alignItems: 'center', justifyContent: 'center', color: '#d97706',
-                                    margin: '0 auto 6px', fontWeight: 700, fontSize: '0.75rem'
-                                }}>TO</div>
-                                <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{trip.toLocation}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Description */}
-                    {trip.description && (
-                        <div className="card">
-                            <h3 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Globe size={18} color="var(--primary)" /> About this Trip
-                            </h3>
-                            <p style={{ lineHeight: 1.7, color: 'var(--text-main)', whiteSpace: 'pre-wrap' }}>
-                                {trip.description}
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Tags */}
-                    {trip.tags?.length > 0 && (
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {trip.tags.map(tag => (
-                                <span key={tag} style={{
-                                    background: 'var(--primary-light)', color: 'var(--primary)',
-                                    borderRadius: '20px', padding: '4px 14px', fontSize: '0.8rem', fontWeight: 600
-                                }}>#{tag}</span>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Chat section */}
-                    <div className="card">
-                        <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <MessageCircle size={18} color="var(--primary)" /> Chat
-                        </h3>
-
-                        {/* Group Chat */}
-                        <div style={{
-                            border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
-                            padding: '16px', marginBottom: '12px',
-                            background: 'var(--bg-card, #fff)'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                                <div style={{
-                                    width: '36px', height: '36px', borderRadius: '50%',
-                                    background: 'var(--accent-light, #ede9fe)', display: 'flex',
-                                    alignItems: 'center', justifyContent: 'center', color: 'var(--accent, #7c3aed)'
-                                }}>
-                                    <Globe size={18} />
-                                </div>
-                                <div>
-                                    <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Group Chat</h4>
-                                    <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>Anyone can join and chat</p>
-                                </div>
-                            </div>
-
-                            {/* Shareable URL */}
+                {/* Locations */}
+                <div className="card" style={{ gap: '16px' }}>
+                    <h3 style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <MapPin size={18} color="var(--primary)" /> Route
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ textAlign: 'center' }}>
                             <div style={{
-                                display: 'flex', alignItems: 'center', gap: '8px',
-                                background: 'var(--bg-main)', border: '1px solid var(--border)',
-                                borderRadius: 'var(--radius-sm)', padding: '8px 12px', marginBottom: '12px',
-                            }}>
-                                <span style={{ flex: 1, fontSize: '0.78rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {groupChatUrl}
-                                </span>
-                                <button
-                                    className="icon-btn"
-                                    style={{ padding: '2px 6px', flexShrink: 0 }}
-                                    onClick={handleCopyLink}
-                                    title="Copy link"
-                                >
-                                    {copied ? <CheckCheck size={16} color="var(--secondary, #10b981)" /> : <Copy size={16} />}
-                                </button>
-                            </div>
-
-                            <button
-                                className="btn btn-primary"
-                                style={{ width: '100%', justifyContent: 'center' }}
-                                onClick={handleGroupChat}
-                                disabled={chatLoading === 'group'}
-                            >
-                                {chatLoading === 'group'
-                                    ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Joining...</>
-                                    : <><Globe size={16} /> Open Group Chat</>
-                                }
-                            </button>
+                                width: '48px', height: '48px', borderRadius: '50%',
+                                background: 'var(--primary-light)', display: 'flex',
+                                alignItems: 'center', justifyContent: 'center', color: 'var(--primary)',
+                                margin: '0 auto 6px', fontWeight: 700, fontSize: '0.75rem'
+                            }}>FROM</div>
+                            <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{trip.fromLocation}</p>
                         </div>
-
-                        {/* Private Chat — hidden for creator */}
-                        {!isCreator && (
+                        <div style={{ flex: 1, borderTop: '2px dashed var(--border)', position: 'relative' }}>
                             <div style={{
-                                border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
-                                padding: '16px', background: 'var(--bg-card, #fff)'
+                                position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                                background: 'white', padding: '4px 10px', borderRadius: '20px',
+                                border: '1px solid var(--border)', fontSize: '0.8rem', color: 'var(--text-muted)',
+                                display: 'flex', alignItems: 'center', gap: '4px'
                             }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                                    <div style={{
-                                        width: '36px', height: '36px', borderRadius: '50%',
-                                        background: 'var(--primary-light)', display: 'flex',
-                                        alignItems: 'center', justifyContent: 'center', color: 'var(--primary)'
-                                    }}>
-                                        <Lock size={18} />
-                                    </div>
-                                    <div>
-                                        <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Private Chat</h4>
-                                        <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                                            Chat privately with {creator.name || 'the creator'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    className="btn btn-outline"
-                                    style={{ width: '100%', justifyContent: 'center' }}
-                                    onClick={handlePrivateChat}
-                                    disabled={chatLoading === 'private'}
-                                >
-                                    {chatLoading === 'private'
-                                        ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Opening...</>
-                                        : <><Lock size={16} /> Private Message</>
-                                    }
-                                </button>
+                                {transportIcon}
                             </div>
-                        )}
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{
+                                width: '48px', height: '48px', borderRadius: '50%',
+                                background: '#fef3c7', display: 'flex',
+                                alignItems: 'center', justifyContent: 'center', color: '#d97706',
+                                margin: '0 auto 6px', fontWeight: 700, fontSize: '0.75rem'
+                            }}>TO</div>
+                            <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{trip.toLocation}</p>
+                        </div>
                     </div>
                 </div>
 
-                {/* Right column */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Description */}
+                {trip.description && (
+                    <div className="card">
+                        <h3 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Globe size={18} color="var(--primary)" /> About this Trip
+                        </h3>
+                        <p style={{ lineHeight: 1.7, color: 'var(--text-main)', whiteSpace: 'pre-wrap' }}>
+                            {trip.description}
+                        </p>
+                    </div>
+                )}
 
-                    {/* Creator card */}
-                    <div className="card" style={{ alignItems: 'center', textAlign: 'center', gap: '12px' }}>
-                        <div style={{
-                            width: '72px', height: '72px', borderRadius: '50%',
-                            background: 'var(--primary-light)', display: 'flex',
-                            alignItems: 'center', justifyContent: 'center',
-                            color: 'var(--primary)', fontSize: '1.8rem', fontWeight: 700,
-                            overflow: 'hidden', border: '3px solid var(--border)',
-                        }}>
-                            {creatorAvatar
-                                ? <img src={creatorAvatar} alt={creator.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                : creatorInitial
-                            }
-                        </div>
-                        <div>
-                            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{creator.name}</h3>
-                            {creator.username && (
-                                <Link
-                                    to={`/user/${creator.username}`}
-                                    style={{
-                                        fontSize: '0.85rem',
-                                        color: 'var(--primary)',
-                                        textDecoration: 'none',
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    @{creator.username}
-                                </Link>
-                            )}
-                        </div>
-                        {creator.bio && (
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-                                {creator.bio}
-                            </p>
-                        )}
-                        {creator.rating?.average > 0 && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#eab308', fontSize: '0.9rem' }}>
-                                <span>★</span>
-                                <span style={{ fontWeight: 600 }}>{creator.rating.average.toFixed(1)}</span>
-                                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>({creator.rating.count})</span>
+                {/* Tags */}
+                {trip.tags?.length > 0 && (
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {trip.tags.map(tag => (
+                            <span key={tag} style={{
+                                background: 'var(--primary-light)', color: 'var(--primary)',
+                                borderRadius: '20px', padding: '4px 14px', fontSize: '0.8rem', fontWeight: 600
+                            }}>#{tag}</span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Chat section */}
+                <div className="card">
+                    <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <MessageCircle size={18} color="var(--primary)" /> Chat
+                    </h3>
+
+                    {/* Group Chat */}
+                    <div style={{
+                        border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+                        padding: '16px', marginBottom: '12px',
+                        background: 'var(--bg-card, #fff)'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                            <div style={{
+                                width: '36px', height: '36px', borderRadius: '50%',
+                                background: 'var(--accent-light, #ede9fe)', display: 'flex',
+                                alignItems: 'center', justifyContent: 'center', color: 'var(--accent, #7c3aed)'
+                            }}>
+                                <Globe size={18} />
                             </div>
-                        )}
+                            <div>
+                                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Group Chat</h4>
+                                <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>Anyone can join and chat</p>
+                            </div>
+                        </div>
+
+                        {/* Shareable URL */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            background: 'var(--bg-main)', border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius-sm)', padding: '8px 12px', marginBottom: '12px',
+                        }}>
+                            <span style={{ flex: 1, fontSize: '0.78rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {groupChatUrl}
+                            </span>
+                            <button
+                                className="icon-btn"
+                                style={{ padding: '2px 6px', flexShrink: 0 }}
+                                onClick={handleCopyLink}
+                                title="Copy link"
+                            >
+                                {copied ? <CheckCheck size={16} color="var(--secondary, #10b981)" /> : <Copy size={16} />}
+                            </button>
+                        </div>
+
+                        <button
+                            className="btn btn-primary"
+                            style={{ width: '100%', justifyContent: 'center' }}
+                            onClick={handleGroupChat}
+                            disabled={chatLoading === 'group'}
+                        >
+                            {chatLoading === 'group'
+                                ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Joining...</>
+                                : <><Globe size={16} /> Open Group Chat</>
+                            }
+                        </button>
+                    </div>
+
+                    {/* Private Chat — hidden for creator */}
+                    {!isCreator && (
+                        <div style={{
+                            border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+                            padding: '16px', background: 'var(--bg-card, #fff)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                                <div style={{
+                                    width: '36px', height: '36px', borderRadius: '50%',
+                                    background: 'var(--primary-light)', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', color: 'var(--primary)'
+                                }}>
+                                    <Lock size={18} />
+                                </div>
+                                <div>
+                                    <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Private Chat</h4>
+                                    <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                        Chat privately with {creator.name || 'the creator'}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                className="btn btn-outline"
+                                style={{ width: '100%', justifyContent: 'center' }}
+                                onClick={handlePrivateChat}
+                                disabled={chatLoading === 'private'}
+                            >
+                                {chatLoading === 'private'
+                                    ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Opening...</>
+                                    : <><Lock size={16} /> Private Message</>
+                                }
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Creator card */}
+                <div className="card" style={{ alignItems: 'center', textAlign: 'center', gap: '12px' }}>
+                    <div style={{
+                        width: '72px', height: '72px', borderRadius: '50%',
+                        background: 'var(--primary-light)', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        color: 'var(--primary)', fontSize: '1.8rem', fontWeight: 700,
+                        overflow: 'hidden', border: '3px solid var(--border)',
+                    }}>
+                        {creatorAvatar
+                            ? <img src={creatorAvatar} alt={creator.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : creatorInitial
+                        }
+                    </div>
+                    <div>
+                        <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{creator.name}</h3>
                         {creator.username && (
-                            <Link to={`/user/${creator.username}`} className="btn btn-outline" style={{ width: '100%', justifyContent: 'center', fontSize: '0.85rem' }}>
-                                <User size={14} /> View Profile
+                            <Link
+                                to={`/user/${creator.username}`}
+                                style={{
+                                    fontSize: '0.85rem',
+                                    color: 'var(--primary)',
+                                    textDecoration: 'none',
+                                    fontWeight: 600,
+                                }}
+                            >
+                                @{creator.username}
                             </Link>
                         )}
                     </div>
-
-                    {/* Participants */}
-                    {trip.participants?.length > 0 && (
-                        <div className="card">
-                            <h3 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem' }}>
-                                <Users size={16} color="var(--primary)" /> Travellers ({trip.participants.length})
-                            </h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {trip.participants.slice(0, 8).map((p) => {
-                                    const pid = p._id || p;
-                                    const pName = p.name || 'Traveller';
-                                    const pImg = p.profileImage?.url;
-                                    return (
-                                        <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div style={{
-                                                width: '32px', height: '32px', borderRadius: '50%',
-                                                background: 'var(--primary-light)', display: 'flex',
-                                                alignItems: 'center', justifyContent: 'center',
-                                                color: 'var(--primary)', fontWeight: 700, fontSize: '0.85rem',
-                                                overflow: 'hidden', flexShrink: 0,
-                                            }}>
-                                                {pImg
-                                                    ? <img src={pImg} alt={pName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                    : pName.charAt(0).toUpperCase()
-                                                }
-                                            </div>
-                                            <span style={{ fontSize: '0.9rem' }}>{pName}</span>
-                                            {pid === (creator._id || creator) && (
-                                                <span style={{ fontSize: '0.7rem', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '10px', padding: '2px 8px', marginLeft: 'auto' }}>
-                                                    Creator
-                                                </span>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                    {creator.bio && (
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+                            {creator.bio}
+                        </p>
+                    )}
+                    {creator.rating?.average > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#eab308', fontSize: '0.9rem' }}>
+                            <span>★</span>
+                            <span style={{ fontWeight: 600 }}>{creator.rating.average.toFixed(1)}</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>({creator.rating.count})</span>
                         </div>
                     )}
-
-                    {/* Trip info summary */}
-                    <div className="card" style={{ gap: '14px' }}>
-                        <h3 style={{ marginBottom: '4px', fontSize: '0.95rem' }}>Trip Info</h3>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>Transport</span>
-                            <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                {transportIcon} {trip.transportMode}
-                            </span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>Date</span>
-                            <span style={{ fontWeight: 600 }}>{new Date(trip.date).toLocaleDateString()}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>Seats</span>
-                            <span style={{ fontWeight: 600 }}>{trip.participants?.length || 1} / {trip.seatsAvailable}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', padding: '8px 0' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>Status</span>
-                            <span style={{ fontWeight: 600, color: status.color }}>{status.text}</span>
-                        </div>
-                    </div>
+                    {creator.username && (
+                        <Link to={`/user/${creator.username}`} className="btn btn-outline" style={{ width: '100%', justifyContent: 'center', fontSize: '0.85rem' }}>
+                            <User size={14} /> View Profile
+                        </Link>
+                    )}
                 </div>
             </div>
         </div>

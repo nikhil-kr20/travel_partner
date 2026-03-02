@@ -1,20 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, User, Plus, MoreVertical, Eye } from 'lucide-react';
-import { getTrips, createTrip, joinTrip } from '../services/trip.service.js';
+import { MapPin, Calendar, Plus, MoreVertical, Eye } from 'lucide-react';
+import { getTrips, createTrip } from '../services/trip.service.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 
-function TripCard({ trip, onJoin, currentUserId }) {
-    const [joining, setJoining] = useState(false);
+function TripCard({ trip, currentUserId }) {
     const navigate = useNavigate();
     const isCreator = trip.creator?._id === currentUserId || trip.creator === currentUserId;
-    const isParticipant = trip.participants?.some(p => (p._id || p) === currentUserId);
-
-    const handleJoin = async () => {
-        setJoining(true);
-        try { await onJoin(trip._id); } catch (_) { }
-        finally { setJoining(false); }
-    };
 
     const defaultImg = 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=600&q=80';
     return (
@@ -31,7 +23,6 @@ function TripCard({ trip, onJoin, currentUserId }) {
             </div>
             <div className="meta-info" style={{ borderTop: 'none', paddingTop: '8px', marginTop: '0' }}>
                 <div className="meta-item"><Calendar size={16} /> {new Date(trip.date).toLocaleDateString()}</div>
-                <div className="meta-item" style={{ marginLeft: 'auto' }}><User size={16} /> {trip.seatsAvailable} seats</div>
             </div>
             <button
                 className="btn btn-outline"
@@ -40,20 +31,13 @@ function TripCard({ trip, onJoin, currentUserId }) {
             >
                 <Eye size={16} /> View Details
             </button>
-            {!isCreator && !isParticipant && trip.status === 'open' && (
-                <button className="btn btn-primary" style={{ marginTop: '8px', width: '100%', justifyContent: 'center' }}
-                    onClick={handleJoin} disabled={joining}>
-                    {joining ? 'Joining...' : 'Join Trip'}
-                </button>
-            )}
             {isCreator && <span className="status-badge status-active" style={{ marginTop: '8px', textAlign: 'center' }}>Your Trip</span>}
-            {isParticipant && !isCreator && <span className="status-badge status-active" style={{ marginTop: '8px', textAlign: 'center' }}>Joined</span>}
         </div>
     );
 }
 
 function CreateTripModal({ onClose, onCreated }) {
-    const [form, setForm] = useState({ fromLocation: '', toLocation: '', date: '', transportMode: 'train', seatsAvailable: 1, description: '' });
+    const [form, setForm] = useState({ fromLocation: '', toLocation: '', date: '', transportMode: 'train', description: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const set = f => e => setForm(p => ({ ...p, [f]: e.target.value }));
@@ -61,8 +45,7 @@ function CreateTripModal({ onClose, onCreated }) {
     const handleSubmit = async (e) => {
         e.preventDefault(); setLoading(true); setError('');
         try {
-            const payload = { ...form, seatsAvailable: Number(form.seatsAvailable) };
-            const trip = await createTrip(payload); onCreated(trip); onClose();
+            const trip = await createTrip(form); onCreated(trip); onClose();
         }
         catch (err) {
             const detail = err.response?.data?.errors?.join(' | ');
@@ -86,7 +69,6 @@ function CreateTripModal({ onClose, onCreated }) {
                             {['Train', 'Bus', 'Flight', 'Car', 'Bike', 'Other'].map(m => <option key={m} value={m.toLowerCase()}>{m}</option>)}
                         </select>
                     </div>
-                    <div className="form-group"><label>Seats Available</label><input type="number" className="form-control" min="1" max="20" value={form.seatsAvailable} onChange={set('seatsAvailable')} /></div>
                     <div className="form-group"><label>Description</label><textarea className="form-control" rows="3" placeholder="Tell others about your trip..." value={form.description} onChange={set('description')} /></div>
                     <div style={{ display: 'flex', gap: '12px' }}>
                         <button type="button" className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }} onClick={onClose}>Cancel</button>
@@ -111,11 +93,6 @@ export default function TripsView() {
 
     useEffect(() => { load(); }, []);
 
-    const handleJoin = async (id) => {
-        await joinTrip(id);
-        load();
-    };
-
     return (
         <div>
             {showCreate && <CreateTripModal onClose={() => setShowCreate(false)} onCreated={(t) => { setTrips(p => [t, ...p]); }} />}
@@ -125,7 +102,7 @@ export default function TripsView() {
             </div>
             {loading ? <div className="loader" /> : (
                 <div className="grid-3">
-                    {trips.map(t => <TripCard key={t._id} trip={t} onJoin={handleJoin} currentUserId={user._id} />)}
+                    {trips.map(t => <TripCard key={t._id} trip={t} currentUserId={user._id} />)}
                     <div className="card" style={{ borderStyle: 'dashed', background: 'transparent', justifyContent: 'center', alignItems: 'center', minHeight: '340px', cursor: 'pointer' }} onClick={() => setShowCreate(true)}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', color: 'var(--primary)' }}><Plus size={24} /></div>
                         <h3 style={{ margin: 0 }}>Plan a new journey</h3>

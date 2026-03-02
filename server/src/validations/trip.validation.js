@@ -13,7 +13,6 @@ const createTrip = Joi.object({
     toLocation: Joi.string().required(),
     date: Joi.date().min(startOfToday()).required(),
     transportMode: Joi.string().valid("flight", "train", "bus", "car", "bike", "other").required(),
-    seatsAvailable: Joi.number().integer().min(1).max(50).required(),
     description: Joi.string().max(1000).optional().allow(""),
     tags: Joi.array().items(Joi.string()).optional(),
 });
@@ -23,7 +22,6 @@ const updateTrip = Joi.object({
     toLocation: Joi.string().optional(),
     date: Joi.date().min(startOfToday()).optional(),
     transportMode: Joi.string().valid("flight", "train", "bus", "car", "bike", "other").optional(),
-    seatsAvailable: Joi.number().integer().min(1).max(50).optional(),
     description: Joi.string().max(1000).optional().allow(""),
     tags: Joi.array().items(Joi.string()).optional(),
 });

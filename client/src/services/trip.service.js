@@ -13,11 +13,6 @@ export const getTripById = (id) =>
 export const createTrip = (body) =>
     api.post('/v1/trips', body).then((r) => r.data.data.trip);
 
-export const joinTrip = (id) =>
-    api.post(`/v1/trips/${id}/join`).then((r) => r.data.data.trip);
-
-export const leaveTrip = (id) =>
-    api.post(`/v1/trips/${id}/leave`).then((r) => r.data.data.trip);
 
 export const cancelTrip = (id) =>
     api.patch(`/v1/trips/${id}/cancel`).then((r) => r.data.data.trip);

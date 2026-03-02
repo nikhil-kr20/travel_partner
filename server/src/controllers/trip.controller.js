@@ -23,19 +23,6 @@ const getTripById = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-const joinTrip = async (req, res, next) => {
-    try {
-        const trip = await tripService.joinTrip(req.params.id, req.user._id);
-        sendSuccess(res, { message: "Joined trip successfully.", data: { trip } });
-    } catch (err) { next(err); }
-};
-
-const leaveTrip = async (req, res, next) => {
-    try {
-        const trip = await tripService.leaveTrip(req.params.id, req.user._id);
-        sendSuccess(res, { message: "Left trip successfully.", data: { trip } });
-    } catch (err) { next(err); }
-};
 
 const updateTrip = async (req, res, next) => {
     try {
@@ -65,4 +52,4 @@ const getTripsByUser = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-module.exports = { createTrip, getTrips, getTripById, joinTrip, leaveTrip, updateTrip, cancelTrip, getMyTrips, getTripsByUser };
+module.exports = { createTrip, getTrips, getTripById, updateTrip, cancelTrip, getMyTrips, getTripsByUser };

@@ -17,7 +17,6 @@ class TripService {
         const trip = await Trip.create({
             ...data,
             creator: creatorId,
-            participants: [creatorId],
             chatId: chat._id,
         });
 
@@ -72,89 +71,13 @@ class TripService {
      */
     async getTripById(tripId) {
         const trip = await Trip.findById(tripId)
-            .populate("creator", "name username profileImage rating bio")
-            .populate("participants", "name username profileImage rating");
+            .populate("creator", "name username profileImage rating bio");
 
         if (!trip) {
             const err = new Error("Trip not found.");
             err.statusCode = 404;
             throw err;
         }
-        return trip;
-    }
-
-    /**
-     * Join a trip (add user as participant).
-     */
-    async joinTrip(tripId, userId) {
-        const trip = await Trip.findById(tripId);
-        if (!trip) {
-            const err = new Error("Trip not found.");
-            err.statusCode = 404;
-            throw err;
-        }
-        if (trip.status !== "open") {
-            const err = new Error("Trip is not open for joining.");
-            err.statusCode = 400;
-            throw err;
-        }
-        if (trip.participants.includes(userId)) {
-            const err = new Error("You are already a participant in this trip.");
-            err.statusCode = 409;
-            throw err;
-        }
-        if (trip.participants.length >= trip.seatsAvailable) {
-            const err = new Error("No seats available in this trip.");
-            err.statusCode = 400;
-            throw err;
-        }
-
-        trip.participants.push(userId);
-        if (trip.participants.length >= trip.seatsAvailable) {
-            trip.status = "confirmed";
-        }
-        await trip.save();
-
-        // Add user to trip group chat
-        if (trip.chatId) {
-            await Chat.findByIdAndUpdate(trip.chatId, {
-                $addToSet: { participants: userId },
-            });
-        }
-
-        logger.info(`User ${userId} joined trip ${tripId}`);
-        return trip;
-    }
-
-    /**
-     * Leave a trip.
-     */
-    async leaveTrip(tripId, userId) {
-        const trip = await Trip.findById(tripId);
-        if (!trip) {
-            const err = new Error("Trip not found.");
-            err.statusCode = 404;
-            throw err;
-        }
-        if (trip.creator.toString() === userId.toString()) {
-            const err = new Error("Trip creator cannot leave. Cancel the trip instead.");
-            err.statusCode = 400;
-            throw err;
-        }
-
-        trip.participants = trip.participants.filter(
-            (p) => p.toString() !== userId.toString()
-        );
-        if (trip.status === "confirmed") trip.status = "open";
-        await trip.save();
-
-        if (trip.chatId) {
-            await Chat.findByIdAndUpdate(trip.chatId, {
-                $pull: { participants: userId },
-            });
-        }
-
-        logger.info(`User ${userId} left trip ${tripId}`);
         return trip;
     }
 
@@ -174,7 +97,7 @@ class TripService {
             throw err;
         }
 
-        const allowedFields = ["fromLocation", "toLocation", "date", "transportMode", "seatsAvailable", "description", "tags"];
+        const allowedFields = ["fromLocation", "toLocation", "date", "transportMode", "description", "tags"];
         allowedFields.forEach((field) => {
             if (updates[field] !== undefined) trip[field] = updates[field];
         });
