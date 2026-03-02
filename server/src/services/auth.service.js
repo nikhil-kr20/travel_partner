@@ -17,7 +17,7 @@ class AuthService {
     /**
      * Register a new user.
      */
-    async register({ name, email, password, phone, role }) {
+    async register({ username, name, email, password, phone, role }) {
         const existing = await User.findOne({ email });
         if (existing) {
             const err = new Error("An account with this email already exists.");
@@ -25,7 +25,7 @@ class AuthService {
             throw err;
         }
 
-        const user = await User.create({ name, email, password, phone, role });
+        const user = await User.create({ username, name, email, password, phone, role });
         logger.info(`New user registered: ${user.email}`);
 
         const accessToken = generateAccessToken(user._id);

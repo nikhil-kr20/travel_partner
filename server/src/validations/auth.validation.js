@@ -7,6 +7,8 @@ const phoneSchema = Joi.string()
     .optional();
 
 const register = Joi.object({
+    username: Joi.string().pattern(/^[a-zA-Z0-9_.]+$/).min(3).max(20).required()
+        .messages({ 'string.pattern.base': 'Username can only contain letters, numbers, underscores and dots.' }),
     name: Joi.string().min(2).max(50).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required(),

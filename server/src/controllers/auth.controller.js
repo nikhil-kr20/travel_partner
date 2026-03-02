@@ -12,8 +12,8 @@ const cookieOptions = {
 
 const register = async (req, res, next) => {
     try {
-        const { name, email, password, phone, role } = req.body;
-        const { user, accessToken, refreshToken } = await authService.register({ name, email, password, phone, role });
+        const { username, name, email, password, phone, role } = req.body;
+        const { user, accessToken, refreshToken } = await authService.register({ username, name, email, password, phone, role });
         res.cookie("refreshToken", refreshToken, cookieOptions);
         sendSuccess(res, {
             statusCode: 201,

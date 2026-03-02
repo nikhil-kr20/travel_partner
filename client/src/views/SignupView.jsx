@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 export default function SignupView() {
     const { register } = useAuth();
-    const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', role: 'user' });
+    const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', role: 'user', username: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -47,6 +47,10 @@ export default function SignupView() {
                 </div>
                 {error && <div className="error-banner">{error}</div>}
                 <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label>Set Your Unique UserName</label>
+                        <input type="text" className="form-control" required placeholder="its_nikhil" value={form.username} onChange={set('username')} />
+                    </div>
                     <div className="form-group">
                         <label>Full Name</label>
                         <input type="text" className="form-control" required placeholder="John Doe" value={form.name} onChange={set('name')} />
