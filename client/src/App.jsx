@@ -78,11 +78,6 @@ function Shell({ children, noPadding = false }) {
     <div className="app-layout">
       {/* Sidebar */}
       <aside className="sidebar">
-        <div className="logo">
-          <div className="logo-icon"><Compass size={24} /></div>
-          TravelPartner
-        </div>
-
         <nav className="nav-menu">
           <NavItem icon={<Home size={20} />} label="Dashboard" to="/dashboard" />
           {!isRider && (
@@ -107,22 +102,6 @@ function Shell({ children, noPadding = false }) {
 
       {/* Main */}
       <main className="main-content">
-        <header className="top-header">
-          <div className="search-bar">
-            <Search size={18} color="var(--text-muted)" />
-            <input type="text" placeholder="Search trips, rides, friends..." />
-          </div>
-          <div className="header-actions">
-            <button className="icon-btn"><Bell size={20} /></button>
-            <div className="user-avatar" onClick={() => navigate('/profile')} title="Profile">
-              {user.profileImage?.url
-                ? <img src={user.profileImage.url} alt={user.name}
-                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                : user.name.charAt(0).toUpperCase()}
-            </div>
-          </div>
-        </header>
-
         {/* Page content */}
         <div className={noPadding ? '' : 'page-content'}>
           {/* Pass unread setter to ChatView via context-like prop */}
@@ -152,12 +131,26 @@ function RidesPage() {
 
 // ─── App ──────────────────────────────────────────────────────
 export default function App() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
-
+      <header className="top-header" style={{ background: 'rgba(255, 255, 255, 0.7)', borderBottom: '1px solid rgba(0, 0, 0, 0.05)', backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)' }}>
+        <div className="logo" style={{ marginBottom: 0, padding: 0 }}>
+          <div className="logo-icon"><Compass size={24} /></div>
+          TravelPartner
+        </div>
+        <div className="header-actions">
+          <div className="user-avatar" onClick={() => navigate('/profile')} title="Profile">
+            {user?.profileImage?.url
+              ? <img src={user.profileImage.url} alt={user?.name}
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              : user?.name?.charAt(0).toUpperCase() || 'U'}
+          </div>
+        </div>
+      </header>
       <Routes>
         {/* ── Guest routes ────────────────────────────── */}
         <Route path="/login" element={<GuestRoute><LoginView /></GuestRoute>} />

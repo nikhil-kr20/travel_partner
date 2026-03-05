@@ -15,8 +15,8 @@ export const globalStyles = `
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden; }
   .app-layout { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
-  .sidebar { width: 260px; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 16px; z-index: 10; }
-  .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; position: relative; }
+  .sidebar { width: 260px; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 90px 16px 24px 16px; z-index: 4; position: fixed; top: 0; left: 0; height: 100vh; overflow: hidden; }
+  .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; position: relative; margin-left: 260px; }
   h1 { font-size: 2.5rem; font-weight: 700; color: var(--primary); letter-spacing: -0.02em; }
   h2 { font-size: 1.75rem; font-weight: 600; margin-bottom: 16px; }
   h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 8px; }

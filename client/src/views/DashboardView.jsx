@@ -74,7 +74,6 @@ export default function DashboardView({ onNavigate }) {
     return (
         <div>
             <div className="hero">
-                <div className="hero-circles" />
                 <div style={{ position: 'relative', zIndex: 1 }}>
                     <h1>Where to next, {user?.name?.split(' ')[0]}?</h1>
                     <p>Discover local companions, plan seamless trips, and book reliable rides all in one place.</p>
