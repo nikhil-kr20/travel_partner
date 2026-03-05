@@ -48,7 +48,7 @@ class TripService {
         const [trips, total] = await Promise.all([
             Trip.find(query)
                 .populate("creator", "name profileImage rating")
-                .sort({ date: 1 })
+                .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(parseInt(limit))
                 .lean(),
