@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-router-dom';
-import { Home, Car, MessageSquare, User, Search, Bell, Compass, MapPin } from 'lucide-react';
+import { Home, Car, MessageSquare, User, Compass, MapPin, LogOut } from 'lucide-react';
+import { motion } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import gsap from 'gsap';
 import { useAuth } from './context/AuthContext.jsx';
 import { globalStyles } from './styles/globalStyles.js';
 
@@ -68,8 +70,16 @@ function NavItem({ icon, label, to, badge }) {
 // ─── Shared Layout Shell ──────────────────────────────────────
 function Shell({ children, noPadding = false }) {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
+  const sidebarRef = useRef(null);
+
+  useEffect(() => {
+    gsap.fromTo(sidebarRef.current,
+      { x: -100, opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.8, ease: "power4.out" }
+    );
+  }, []);
 
   if (!user) return null;
   const isRider = user.role === 'rider';
@@ -77,7 +87,12 @@ function Shell({ children, noPadding = false }) {
   return (
     <div className="app-layout">
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className="sidebar" ref={sidebarRef}>
+        <div className="logo" style={{ marginBottom: '32px' }}>
+          <div className="logo-icon"><Compass size={24} /></div>
+          TravelPartner
+        </div>
+
         <nav className="nav-menu">
           <NavItem icon={<Home size={20} />} label="Dashboard" to="/dashboard" />
           {!isRider && (
@@ -85,16 +100,22 @@ function Shell({ children, noPadding = false }) {
           )}
           <NavItem icon={<Car size={20} />} label={isRider ? 'My Rides' : 'Book Ride'} to="/rides" />
           <NavItem icon={<MessageSquare size={20} />} label="Messages" to="/chat" badge={unreadCount || null} />
-          <div style={{ margin: '20px 0', borderBottom: '1px solid var(--border)' }} />
+
+          <div style={{ margin: '24px 0', borderBottom: '1px solid var(--border)' }} />
+
           <NavItem icon={<User size={20} />} label="Profile" to="/profile" />
+          <div className="nav-item" onClick={logout} style={{ color: '#f87171' }}>
+             <LogOut size={20} />
+             <span>Logout</span>
+          </div>
         </nav>
 
         <div style={{ marginTop: 'auto', padding: '20px 0' }}>
-          <div className="card" style={{ padding: '16px', background: 'var(--primary-light)', borderColor: 'var(--primary-light)' }}>
+          <div className="glass-card" style={{ padding: '20px', background: 'rgba(99, 102, 241, 0.1)', borderColor: 'rgba(99, 102, 241, 0.2)' }}>
             <h4 style={{ color: 'var(--primary)', marginBottom: '8px' }}>Pro Plan</h4>
-            <p className="text-sm" style={{ marginBottom: '12px' }}>Unlock all companion features.</p>
-            <button className="btn btn-primary" style={{ width: '100%', padding: '8px', fontSize: '0.85rem' }}>
-              Upgrade
+            <p className="text-sm" style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>Explore the world with zero limits.</p>
+            <button className="btn btn-primary" style={{ width: '100%', padding: '10px', fontSize: '0.85rem' }}>
+              Upgrade Now
             </button>
           </div>
         </div>
@@ -104,10 +125,18 @@ function Shell({ children, noPadding = false }) {
       <main className="main-content">
         {/* Page content */}
         <div className={noPadding ? '' : 'page-content'}>
-          {/* Pass unread setter to ChatView via context-like prop */}
-          {React.isValidElement(children)
-            ? React.cloneElement(children, { onUnreadChange: setUnreadCount })
-            : children}
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            {/* Pass unread setter to ChatView via context-like prop */}
+            {React.isValidElement(children)
+              ? React.cloneElement(children, { onUnreadChange: setUnreadCount })
+              : children}
+          </motion.div>
         </div>
       </main>
     </div>
@@ -134,10 +163,11 @@ export default function App() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
+  // navigate is used in the header click handler below
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
-      <header className="top-header" style={{ background: 'rgba(255, 255, 255, 0.7)', borderBottom: '1px solid rgba(0, 0, 0, 0.05)', backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)' }}>
+      <header className="top-header">
         <div className="logo" style={{ marginBottom: 0, padding: 0 }}>
           <div className="logo-icon"><Compass size={24} /></div>
           TravelPartner

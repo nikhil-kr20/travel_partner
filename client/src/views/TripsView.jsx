@@ -1,37 +1,53 @@
-import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Plus, MoreVertical, Eye, Search, X } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { MapPin, Calendar, Plus, MoreVertical, Eye, Search, X, ArrowRight } from 'lucide-react';
+import gsap from 'gsap';
 import { getTrips, createTrip } from '../services/trip.service.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 
 function TripCard({ trip, currentUserId }) {
     const navigate = useNavigate();
+    const cardRef = useRef(null);
     const isCreator = trip.creator?._id === currentUserId || trip.creator === currentUserId;
     const defaultImg = 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=600&q=80';
 
+    useEffect(() => {
+        gsap.fromTo(cardRef.current,
+            { y: 30, opacity: 0 },
+            {
+                y: 0, opacity: 1, duration: 0.6,
+                scrollTrigger: {
+                    trigger: cardRef.current,
+                    start: "top 95%",
+                }
+            }
+        );
+    }, []);
+
     return (
-        <div className="card">
-            <img src={trip.image || defaultImg} alt={trip.fromLocation} className="card-img" />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <span className="status-badge status-upcoming">{trip.status}</span>
-                <button className="icon-btn" style={{ padding: 0 }} aria-label="Trip options"><MoreVertical size={18} /></button>
+        <div className="card" ref={cardRef}>
+            <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
+                <img src={trip.image || defaultImg} alt={trip.fromLocation} className="card-img" style={{ marginBottom: 0 }} />
+                <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '8px' }}>
+                    <span className="status-badge status-upcoming" style={{ backdropFilter: 'blur(8px)', background: 'rgba(99, 102, 241, 0.3)' }}>{trip.status}</span>
+                </div>
             </div>
-            <h3 style={{ marginTop: '8px' }}>{trip.fromLocation} → {trip.toLocation}</h3>
-            <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>{trip.description}</p>
-            <div className="meta-info">
-                <div className="meta-item"><MapPin size={16} /> {trip.transportMode}</div>
+            <h3 style={{ fontSize: '1.25rem' }}>{trip.fromLocation} → {trip.toLocation}</h3>
+            <p style={{ fontSize: '0.95rem', margin: '8px 0 16px', color: 'var(--text-muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{trip.description}</p>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-muted)' }}><MapPin size={14} /> {trip.transportMode}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-muted)' }}><Calendar size={14} /> {new Date(trip.date).toLocaleDateString()}</div>
             </div>
-            <div className="meta-info" style={{ borderTop: 'none', paddingTop: '8px', marginTop: '0' }}>
-                <div className="meta-item"><Calendar size={16} /> {new Date(trip.date).toLocaleDateString()}</div>
-            </div>
+
             <button
-                className="btn btn-outline"
-                style={{ marginTop: '12px', width: '100%', justifyContent: 'center' }}
+                className="btn btn-primary"
+                style={{ width: '100%', justifyContent: 'center' }}
                 onClick={() => navigate(`/trips/${trip._id}`)}
             >
-                <Eye size={16} /> View Details
+                View Journey <ArrowRight size={16} />
             </button>
-            {isCreator && <span className="status-badge status-active" style={{ marginTop: '8px', textAlign: 'center' }}>Your Trip</span>}
+            {isCreator && <div style={{ marginTop: '12px', textAlign: 'center' }}><span className="status-badge status-active" style={{ fontSize: '0.7rem' }}>Organized by You</span></div>}
         </div>
     );
 }
@@ -53,8 +69,8 @@ function CreateTripModal({ onClose, onCreated }) {
     };
 
     return (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="auth-card" style={{ maxWidth: '500px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="auth-card" style={{ maxWidth: '500px', width: '90%', maxHeight: '90vh', overflowY: 'auto', background: 'rgba(30, 41, 59, 0.95)' }}>
                 <h2 style={{ marginBottom: '24px' }}>Create New Trip</h2>
                 {error && <div className="error-banner">{error}</div>}
                 <form onSubmit={handleSubmit}>
@@ -93,7 +109,9 @@ export default function TripsView() {
         getTrips(params).then(d => setTrips(d.trips || [])).catch(() => setTrips([])).finally(() => setLoading(false));
     };
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => {
+        load();
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -122,33 +140,39 @@ export default function TripsView() {
             {showCreate && <CreateTripModal onClose={() => setShowCreate(false)} onCreated={(t) => { setTrips(p => [t, ...p]); }} />}
 
             {/* Page Header */}
-            <div className="section-header">
-                <div><h1>Trips</h1><p>Find companions for your next journey.</p></div>
-                <button className="btn btn-primary" onClick={() => setShowCreate(true)}><Plus size={18} /> New Trip</button>
+            <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div>
+                    <span style={{ color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', marginBottom: '8px', display: 'block' }}>
+                        Exploration
+                    </span>
+                    <h1 style={{ margin: 0 }}>Available Trips</h1>
+                    <p style={{ marginTop: '8px' }}>Find the perfect companion for your next adventure.</p>
+                </div>
+                <button className="btn btn-primary" onClick={() => setShowCreate(true)}><Plus size={20} /> Create Journey</button>
             </div>
 
             {/* Search Bar */}
             <form
                 onSubmit={handleSearch}
                 style={{
-                    display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap',
-                    background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
-                    padding: '16px 20px', marginBottom: '28px', boxShadow: 'var(--shadow-sm)'
+                    display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap',
+                    background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
+                    padding: '20px', marginBottom: '40px', backdropFilter: 'blur(10px)'
                 }}
             >
                 {/* From input */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '160px', background: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-full)', padding: '10px 16px' }}>
-                    <MapPin size={16} color="var(--text-muted)" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '200px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: 'var(--radius-full)', padding: '12px 20px' }}>
+                    <MapPin size={18} color="var(--text-muted)" />
                     <input
                         type="text"
-                        placeholder="From (e.g. Mumbai)"
+                        placeholder="Leaving from..."
                         value={from}
                         onChange={e => setFrom(e.target.value)}
-                        style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.9rem', color: 'var(--text-main)' }}
+                        style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '1rem', color: 'var(--text-main)' }}
                     />
                 </div>
                 {/* To input */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '160px', background: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-full)', padding: '10px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '200px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: 'var(--radius-full)', padding: '12px 20px' }}>
                     <MapPin size={16} color="var(--primary)" />
                     <input
                         type="text"

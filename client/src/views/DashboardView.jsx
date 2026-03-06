@@ -1,28 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { MapPin, Car, Calendar, User, Plus, Search, Star, Clock, ChevronRight, MoreVertical } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { MapPin, Car, Calendar, User, Plus, Search, Star, Clock, ChevronRight, MoreVertical, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getTrips } from '../services/trip.service.js';
 import { getRides } from '../services/ride.service.js';
 import { useNavigate } from 'react-router-dom';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 function TripCard({ trip }) {
     const navigate = useNavigate();
+    const cardRef = useRef(null);
     const defaultImg = 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=600&q=80';
+
+    useEffect(() => {
+        gsap.fromTo(cardRef.current,
+            { y: 30, opacity: 0 },
+            {
+                y: 0, opacity: 1, duration: 0.8,
+                scrollTrigger: {
+                    trigger: cardRef.current,
+                    start: "top 90%",
+                }
+            }
+        );
+    }, []);
+
     return (
-        <div className="card">
-            <img src={trip.image || defaultImg} alt={trip.title || trip.fromLocation} className="card-img" />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <span className="status-badge status-upcoming">{trip.status || 'open'}</span>
-                <button className="icon-btn" style={{ padding: 0 }} aria-label="Trip options"><MoreVertical size={18} /></button>
+        <div className="card" ref={cardRef}>
+            <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
+                <img src={trip.image || defaultImg} alt={trip.title || trip.fromLocation} className="card-img" style={{ marginBottom: 0, transition: 'transform 0.5s ease' }} />
+                <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
+                     <span className="status-badge status-upcoming" style={{ backdropFilter: 'blur(8px)', background: 'rgba(99, 102, 241, 0.3)' }}>{trip.status || 'open'}</span>
+                </div>
             </div>
-            <h3 style={{ marginTop: '8px' }}>{trip.title || `${trip.fromLocation} → ${trip.toLocation}`}</h3>
-            <div className="meta-info">
-                <div className="meta-item"><MapPin size={16} /> {trip.fromLocation} → {trip.toLocation}</div>
+            <h3 style={{ fontSize: '1.2rem' }}>{trip.title || `${trip.fromLocation} → ${trip.toLocation}`}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '12px' }}>
+                <Calendar size={14} /> {new Date(trip.date).toLocaleDateString()}
             </div>
-            <div className="meta-info" style={{ borderTop: 'none', paddingTop: '8px', marginTop: '0' }}>
-                <div className="meta-item"><Calendar size={16} /> {new Date(trip.date).toLocaleDateString()}</div>
+            <div style={{ marginTop: 'auto' }}>
+                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => navigate(`/trips/${trip._id}`)}>
+                    Details <ArrowRight size={16} />
+                </button>
             </div>
-            <button className="btn btn-outline" style={{ marginTop: '20px', width: '100%', justifyContent: 'center' }} onClick={() => navigate(`/trips/${trip._id}`)}>View Details</button>
         </div>
     );
 }
@@ -60,8 +81,14 @@ export default function DashboardView({ onNavigate }) {
     const [trips, setTrips] = useState([]);
     const [rides, setRides] = useState([]);
     const [loading, setLoading] = useState(true);
+    const heroRef = useRef(null);
 
     useEffect(() => {
+        gsap.fromTo(heroRef.current,
+            { opacity: 0, scale: 0.98 },
+            { opacity: 1, scale: 1, duration: 1.2, ease: "expo.out" }
+        );
+
         Promise.all([
             getTrips({ limit: 3 }).catch(() => ({ trips: [] })),
             getRides({ limit: 2 }).catch(() => ({ rides: [] })),
@@ -73,13 +100,20 @@ export default function DashboardView({ onNavigate }) {
 
     return (
         <div>
-            <div className="hero">
+            <div className="hero" ref={heroRef}>
                 <div style={{ position: 'relative', zIndex: 1 }}>
+                    <span style={{ color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', fontSize: '0.8rem', marginBottom: '16px', display: 'block' }}>
+                        Adventure Awaits
+                    </span>
                     <h1>Where to next, {user?.name?.split(' ')[0]}?</h1>
-                    <p>Discover local companions, plan seamless trips, and book reliable rides all in one place.</p>
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                        <button className="btn btn-primary" onClick={() => onNavigate('trips')}><Plus size={18} /> Create Trip</button>
-                        <button className="btn btn-secondary" style={{ background: 'white', color: 'var(--primary)' }} onClick={() => onNavigate('rides')}><Search size={18} /> Find a Ride</button>
+                    <p style={{ maxWidth: '600px', fontSize: '1.2rem' }}>Discover local companions, plan seamless trips, and book reliable rides all in one place.</p>
+                    <div style={{ display: 'flex', gap: '20px', marginTop: '40px' }}>
+                        <button className="btn btn-primary" onClick={() => onNavigate('trips')}>
+                            <Plus size={20} /> Plan a Trip
+                        </button>
+                        <button className="btn btn-outline" style={{ border: '2px solid white' }} onClick={() => onNavigate('rides')}>
+                            <Search size={20} /> Find a Ride
+                        </button>
                     </div>
                 </div>
             </div>

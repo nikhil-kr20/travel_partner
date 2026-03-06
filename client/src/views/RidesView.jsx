@@ -12,25 +12,28 @@ function RideCard({ ride, onBook }) {
         try {
             await onBook(ride._id);
             setBooked(true);
-        } catch (_) { }
-        finally { setBooking(false); }
+        } catch (e) { // eslint-disable-line no-unused-vars
+            // handle error
+        } finally {
+            setBooking(false);
+        }
     };
 
     return (
-        <div className="card" style={{ flexDirection: 'row', alignItems: 'center', gap: '20px' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: 'var(--radius-md)', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0 }}>
-                <Car size={32} />
+        <div className="card" style={{ flexDirection: 'row', alignItems: 'center', gap: '24px', background: 'rgba(30, 41, 59, 0.4)' }}>
+            <div style={{ width: '90px', height: '90px', borderRadius: 'var(--radius-md)', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0, border: '1px solid var(--border)' }}>
+                <Car size={36} />
             </div>
             <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span className="text-sm" style={{ color: 'var(--accent)', fontWeight: 600 }}>{ride.vehicleType || 'Ride'}</span>
-                    <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--text-main)' }}>₹{ride.pricePerKm}/km</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span className="text-sm" style={{ color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{ride.vehicleType || 'Standard'}</span>
+                    <span style={{ fontWeight: '800', fontSize: '1.25rem', color: 'var(--text-main)' }}>₹{ride.pricePerKm}/km</span>
                 </div>
-                <h3 style={{ fontSize: '1.05rem', marginBottom: '8px' }}>{ride.fromLocation} → {ride.toLocation}</h3>
-                <div style={{ display: 'flex', gap: '16px', color: 'var(--text-muted)', fontSize: '0.875rem', flexWrap: 'wrap' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> {new Date(ride.date).toLocaleDateString()}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><User size={14} /> {ride.riderId?.name || 'Driver'}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Car size={14} /> {ride.availableSeats} seats</span>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '12px' }}>{ride.fromLocation} → {ride.toLocation}</h3>
+                <div style={{ display: 'flex', gap: '20px', color: 'var(--text-muted)', fontSize: '0.9rem', flexWrap: 'wrap' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={16} /> {new Date(ride.date).toLocaleDateString()}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><User size={16} /> {ride.riderId?.name || 'Driver'}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Car size={16} /> {ride.availableSeats} seats left</span>
                 </div>
             </div>
             {booked ? (
@@ -58,7 +61,9 @@ export default function RidesView() {
         getRides(params).then(d => { setRides(d.rides || []); setSearched(true); }).catch(() => setError('Failed to load rides.')).finally(() => setLoading(false));
     };
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => {
+        load();
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -71,20 +76,24 @@ export default function RidesView() {
 
     return (
         <div>
-            <div className="section-header">
-                <div><h1>Book a Ride</h1><p>Find available rides from drivers in your area.</p></div>
+            <div style={{ marginBottom: '40px' }}>
+                <span style={{ color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', marginBottom: '8px', display: 'block' }}>
+                    Transportation
+                </span>
+                <h1 style={{ margin: 0 }}>Book a Ride</h1>
+                <p style={{ marginTop: '8px' }}>Swift, reliable, and shared commutes at your fingertips.</p>
             </div>
-            <div className="booking-form">
-                <form onSubmit={handleSearch} style={{ display: 'grid', gap: '16px', gridTemplateColumns: '1fr 1fr auto', alignItems: 'end' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', marginBottom: '40px', backdropFilter: 'blur(10px)' }}>
+                <form onSubmit={handleSearch} style={{ display: 'grid', gap: '20px', gridTemplateColumns: '1fr 1fr auto', alignItems: 'end' }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label>From</label>
-                        <input type="text" className="form-control" placeholder="Pickup location..." value={from} onChange={e => setFrom(e.target.value)} />
+                        <label style={{ color: 'var(--text-muted)', marginBottom: '10px' }}>Pickup Point</label>
+                        <input type="text" className="form-control" placeholder="Where are we starting?" value={from} onChange={e => setFrom(e.target.value)} />
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label>To</label>
-                        <input type="text" className="form-control" placeholder="Destination..." value={to} onChange={e => setTo(e.target.value)} />
+                        <label style={{ color: 'var(--text-muted)', marginBottom: '10px' }}>Destination</label>
+                        <input type="text" className="form-control" placeholder="Where to?" value={to} onChange={e => setTo(e.target.value)} />
                     </div>
-                    <button type="submit" className="btn btn-primary" style={{ height: '45px' }}>Search</button>
+                    <button type="submit" className="btn btn-primary" style={{ height: '52px', padding: '0 32px' }}>Search Rides</button>
                 </form>
             </div>
             {error && <div className="error-banner">{error}</div>}

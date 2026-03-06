@@ -25,7 +25,6 @@ export default function ChatView({ onUnreadChange }) {
     const [msgText, setMsgText] = useState('');
     const [filter, setFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
-    const [typing, setTyping] = useState(false);
     const [typingUser, setTypingUser] = useState('');
     const bottomRef = useRef(null);
     const typingTimer = useRef(null);
@@ -37,7 +36,7 @@ export default function ChatView({ onUnreadChange }) {
             const unread = (list || []).reduce((sum, c) => sum + (c.unreadCount || 0), 0);
             onUnreadChange?.(unread);
         }).catch(() => setChats([]));
-    }, [filter]);
+    }, [filter, onUnreadChange]);
 
     // Load messages when active chat changes
     useEffect(() => {
@@ -108,12 +107,17 @@ export default function ChatView({ onUnreadChange }) {
 
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '24px 32px 12px' }}><h2>Messages</h2></div>
+            <div style={{ padding: '40px 40px 12px' }}>
+                <span style={{ color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', marginBottom: '8px', display: 'block' }}>
+                    Connections
+                </span>
+                <h2 style={{ margin: 0 }}>Messages</h2>
+            </div>
             <div className="chat-layout">
                 {/* Sidebar */}
-                <div className="chat-sidebar">
+                <div className="chat-sidebar" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
                     <div className="chat-sidebar-header">
-                        <div className="search-bar" style={{ width: '100%', background: 'white' }}>
+                        <div className="search-bar" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)' }}>
                             <Search size={16} color="var(--text-muted)" />
                             <input
                                 type="text"
@@ -126,7 +130,7 @@ export default function ChatView({ onUnreadChange }) {
                         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
                             {['all', 'personal', 'group'].map(f => (
                                 <span key={f} className={`status-badge ${filter === f ? 'status-upcoming' : ''}`}
-                                    style={{ cursor: 'pointer', background: filter === f ? undefined : '#f1f5f9', textTransform: 'capitalize' }}
+                                            style={{ cursor: 'pointer', background: filter === f ? undefined : 'rgba(255,255,255,0.05)', textTransform: 'capitalize', border: filter === f ? 'none' : '1px solid var(--border)' }}
                                     onClick={() => setFilter(f)}>{f}</span>
                             ))}
                         </div>
@@ -192,10 +196,11 @@ export default function ChatView({ onUnreadChange }) {
                                 {typingUser && <div className="typing-indicator">{typingUser} is typing...</div>}
                                 <div ref={bottomRef} />
                             </div>
-                            <div className="chat-input-area">
-                                <button className="icon-btn" style={{ padding: '0 8px' }} aria-label="Attach file"><Plus size={24} /></button>
+                            <div className="chat-input-area" style={{ background: 'transparent' }}>
+                                <button className="icon-btn" style={{ padding: '0 12px' }} aria-label="Attach file"><Plus size={24} /></button>
                                 <input type="text" placeholder="Type a message..."
-                                    value={msgText} onChange={e => setMsgText(e.target.value)} onKeyDown={handleKeyDown} aria-label="Type a message" />
+                                    value={msgText} onChange={e => setMsgText(e.target.value)} onKeyDown={handleKeyDown} aria-label="Type a message"
+                                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)' }} />
                                 <button className="send-btn" onClick={handleSend} aria-label="Send message"><Send size={18} style={{ marginLeft: '-2px' }} /></button>
                             </div>
                         </>

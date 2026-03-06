@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Compass, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Compass, Eye, EyeOff, User, Mail, Phone, Lock, AtSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import gsap from 'gsap';
 
 export default function SignupView() {
     const { register } = useAuth();
@@ -9,6 +10,14 @@ export default function SignupView() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const cardRef = useRef(null);
+
+    useEffect(() => {
+        gsap.fromTo(cardRef.current,
+            { y: 50, opacity: 0, scale: 0.95 },
+            { y: 0, opacity: 1, scale: 1, duration: 1, ease: "power4.out" }
+        );
+    }, []);
 
     const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
 
@@ -49,24 +58,37 @@ export default function SignupView() {
                 {error && <div className="error-banner">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Set Your Unique UserName</label>
-                        <input type="text" className="form-control" required placeholder="its_nikhil" value={form.username} onChange={set('username')} />
+                        <label>UserName</label>
+                        <div style={{ position: 'relative' }}>
+                            <AtSign size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <input type="text" className="form-control" required placeholder="its_nikhil" value={form.username} onChange={set('username')} style={{ paddingLeft: '48px' }} />
+                        </div>
                     </div>
                     <div className="form-group">
                         <label>Full Name</label>
-                        <input type="text" className="form-control" required placeholder="John Doe" value={form.name} onChange={set('name')} />
+                        <div style={{ position: 'relative' }}>
+                            <User size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <input type="text" className="form-control" required placeholder="John Doe" value={form.name} onChange={set('name')} style={{ paddingLeft: '48px' }} />
+                        </div>
                     </div>
                     <div className="form-group">
                         <label>Email</label>
-                        <input type="email" className="form-control" required placeholder="name@example.com" value={form.email} onChange={set('email')} />
+                        <div style={{ position: 'relative' }}>
+                            <Mail size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <input type="email" className="form-control" required placeholder="name@example.com" value={form.email} onChange={set('email')} style={{ paddingLeft: '48px' }} />
+                        </div>
                     </div>
                     <div className="form-group">
                         <label>Phone (optional)</label>
-                        <input type="tel" className="form-control" placeholder="+91 98765 43210" value={form.phone} onChange={set('phone')} />
+                        <div style={{ position: 'relative' }}>
+                            <Phone size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <input type="tel" className="form-control" placeholder="+91 98765 43210" value={form.phone} onChange={set('phone')} style={{ paddingLeft: '48px' }} />
+                        </div>
                     </div>
                     <div className="form-group">
                         <label>Password</label>
                         <div style={{ position: 'relative' }}>
+                            <Lock size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 className="form-control"
@@ -74,7 +96,7 @@ export default function SignupView() {
                                 placeholder="••••••••"
                                 value={form.password}
                                 onChange={set('password')}
-                                style={{ paddingRight: '44px' }}
+                                style={{ paddingRight: '44px', paddingLeft: '48px' }}
                             />
                             <button
                                 type="button"

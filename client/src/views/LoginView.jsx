@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Compass, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Compass, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import gsap from 'gsap';
 
 export default function LoginView() {
     const { login } = useAuth();
@@ -11,6 +12,14 @@ export default function LoginView() {
     const [error, setError] = useState('');
     const [role, setRole] = useState('user');
     const [loading, setLoading] = useState(false);
+    const cardRef = useRef(null);
+
+    useEffect(() => {
+        gsap.fromTo(cardRef.current,
+            { y: 50, opacity: 0, scale: 0.95 },
+            { y: 0, opacity: 1, scale: 1, duration: 1, ease: "power4.out" }
+        );
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -42,13 +51,21 @@ export default function LoginView() {
                 {error && <div className="error-banner">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Email</label>
-                        <input type="email" className="form-control" required placeholder="name@example.com"
-                            value={email} onChange={e => setEmail(e.target.value)} />
+                        <label style={{ color: 'var(--text-muted)' }}>Email Address</label>
+                        <div style={{ position: 'relative' }}>
+                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                                <Mail size={18} />
+                            </div>
+                            <input type="email" className="form-control" required placeholder="name@example.com"
+                                value={email} onChange={e => setEmail(e.target.value)} style={{ paddingLeft: '48px' }} />
+                        </div>
                     </div>
                     <div className="form-group">
-                        <label>Password</label>
+                        <label style={{ color: 'var(--text-muted)' }}>Password</label>
                         <div style={{ position: 'relative' }}>
+                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                                <Lock size={18} />
+                            </div>
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 className="form-control"
@@ -56,7 +73,7 @@ export default function LoginView() {
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
-                                style={{ paddingRight: '44px' }}
+                                style={{ paddingRight: '44px', paddingLeft: '48px' }}
                             />
                             <button
                                 type="button"

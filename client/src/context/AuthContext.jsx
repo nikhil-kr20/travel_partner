@@ -55,7 +55,11 @@ export function AuthProvider({ children }) {
 
     // ── Logout ──────────────────────────────────────────────────
     const logout = useCallback(async () => {
-        try { await api.post('/v1/auth/logout'); } catch (_) { }
+        try {
+            await api.post('/v1/auth/logout');
+        } catch {
+            // Ignore error on logout
+        }
         localStorage.removeItem('accessToken');
         setUser(null);
         disconnectSocket();

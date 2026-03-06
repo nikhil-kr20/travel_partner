@@ -11,27 +11,23 @@ function MiniTripCard({ trip }) {
     return (
         <div
             className="card"
-            style={{ cursor: 'pointer', gap: '10px', transition: 'transform 0.15s', padding: '16px' }}
+            style={{ cursor: 'pointer', gap: '12px', padding: '20px', background: 'rgba(255,255,255,0.03)' }}
             onClick={() => navigate(`/trips/${trip._id}`)}
-            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
         >
             <img
                 src={trip.image || defaultImg}
                 alt={trip.fromLocation}
-                style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', marginBottom: '4px' }}
+                style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: 'var(--radius-md)', marginBottom: '8px' }}
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700 }}>
-                    {trip.fromLocation} → {trip.toLocation}
-                </h4>
-            </div>
-            <div style={{ display: 'flex', gap: '12px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>
+                {trip.fromLocation} → {trip.toLocation}
+            </h4>
+            <div style={{ display: 'flex', gap: '16px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Calendar size={13} /> {new Date(trip.date).toLocaleDateString()}
+                    <Calendar size={14} /> {new Date(trip.date).toLocaleDateString()}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <MapPin size={13} /> {trip.transportMode}
+                    <MapPin size={14} /> {trip.transportMode}
                 </span>
             </div>
         </div>
@@ -48,17 +44,24 @@ export default function PublicProfileView() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        setLoading(true);
-        getPublicProfile(username)
-            .then(async (user) => {
+        const loadProfile = async () => {
+            setLoading(true);
+            try {
+                const user = await getPublicProfile(username);
                 setProfile(user);
                 try {
                     const t = await getTripsByUser(user._id);
                     setTrips(t || []);
-                } catch (_) { setTrips([]); }
-            })
-            .catch(() => setError('User not found.'))
-            .finally(() => setLoading(false));
+                } catch (e) { // eslint-disable-line no-unused-vars
+                    setTrips([]);
+                }
+            } catch (err) { // eslint-disable-line no-unused-vars
+                setError('User not found.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadProfile();
     }, [username]);
 
     if (loading) {
@@ -92,30 +95,27 @@ export default function PublicProfileView() {
 
             {/* Profile hero */}
             <div style={{
-                background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+                background: 'radial-gradient(circle at top right, rgba(99, 102, 241, 0.3), transparent), rgba(30, 41, 59, 0.4)',
                 borderRadius: 'var(--radius-lg)',
-                padding: '40px 36px',
+                padding: '50px 40px',
                 color: 'white',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '28px',
-                marginBottom: '28px',
+                gap: '32px',
+                marginBottom: '40px',
                 position: 'relative',
                 overflow: 'hidden',
+                border: '1px solid var(--border)',
+                backdropFilter: 'blur(20px)'
             }}>
-                <div style={{
-                    position: 'absolute', top: '-30px', right: '-30px',
-                    width: '180px', height: '180px', borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.07)'
-                }} />
-
                 {/* Avatar */}
                 <div style={{
-                    width: '96px', height: '96px', borderRadius: '50%',
-                    background: 'white', display: 'flex',
+                    width: '120px', height: '120px', borderRadius: '50%',
+                    background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)', display: 'flex',
                     alignItems: 'center', justifyContent: 'center',
-                    color: 'var(--primary)', fontSize: '2.2rem', fontWeight: 800,
-                    overflow: 'hidden', border: '4px solid rgba(255,255,255,0.4)',
+                    color: 'white', fontSize: '3rem', fontWeight: 800,
+                    overflow: 'hidden', border: '4px solid rgba(255,255,255,0.1)',
+                    boxShadow: '0 0 30px rgba(99, 102, 241, 0.4)',
                     flexShrink: 0, position: 'relative', zIndex: 1,
                 }}>
                     {avatarUrl

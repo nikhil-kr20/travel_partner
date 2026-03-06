@@ -5,7 +5,6 @@ import { updateProfile, uploadAvatar } from '../services/auth.service.js';
 
 export default function ProfileView({ onLogout }) {
     const { user, updateUser } = useAuth();
-    const [editing, setEditing] = useState(false);
     const [form, setForm] = useState({ name: user?.name || '', bio: user?.bio || '', phone: user?.phone || '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -19,7 +18,6 @@ export default function ProfileView({ onLogout }) {
             const updated = await updateProfile(form);
             updateUser(updated);
             setSuccess('Profile updated successfully!');
-            setEditing(false);
         } catch (err) { setError(err.response?.data?.message || 'Update failed.'); }
         finally { setLoading(false); }
     };
@@ -32,23 +30,28 @@ export default function ProfileView({ onLogout }) {
             const updated = await uploadAvatar(file);
             updateUser(updated);
             setSuccess('Avatar updated!');
-        } catch (err) { setError('Avatar upload failed.'); }
+        } catch (e) { setError('Avatar upload failed.'); } // eslint-disable-line no-unused-vars
         finally { setLoading(false); }
     };
 
     return (
         <div>
-            <div className="section-header"><h1>Profile</h1></div>
-            <div className="grid-2" style={{ maxWidth: '800px' }}>
+            <div style={{ paddingBottom: '40px' }}>
+                <span style={{ color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', marginBottom: '8px', display: 'block' }}>
+                    Personal
+                </span>
+                <h1 style={{ margin: 0 }}>My Profile</h1>
+            </div>
+            <div className="grid-2" style={{ maxWidth: '900px' }}>
                 {/* Profile Card */}
-                <div className="card" style={{ alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+                <div className="card" style={{ alignItems: 'center', textAlign: 'center', gap: '20px', background: 'rgba(30, 41, 59, 0.4)' }}>
                     <label style={{ cursor: 'pointer', position: 'relative' }}>
-                        <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: '2.5rem', fontWeight: 700, margin: '0 auto', overflow: 'hidden', border: '3px solid var(--border)' }}>
+                        <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '3rem', fontWeight: 800, margin: '0 auto', overflow: 'hidden', border: '4px solid rgba(255,255,255,0.1)', boxShadow: '0 0 20px rgba(99, 102, 241, 0.3)' }}>
                             {user?.profileImage?.url
                                 ? <img src={user.profileImage.url} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 : user?.name?.charAt(0)}
                         </div>
-                        <div style={{ position: 'absolute', bottom: 0, right: 0, background: 'var(--primary)', color: 'white', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>✎</div>
+                        <div style={{ position: 'absolute', bottom: '5px', right: '5px', background: 'var(--primary)', color: 'white', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', border: '2px solid var(--bg-main)' }}>✎</div>
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
                     </label>
                     <div>
