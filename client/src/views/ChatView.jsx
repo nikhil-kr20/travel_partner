@@ -24,6 +24,7 @@ export default function ChatView({ onUnreadChange }) {
     const [messages, setMessages] = useState([]);
     const [msgText, setMsgText] = useState('');
     const [filter, setFilter] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
     const [typing, setTyping] = useState(false);
     const [typingUser, setTypingUser] = useState('');
     const bottomRef = useRef(null);
@@ -114,7 +115,13 @@ export default function ChatView({ onUnreadChange }) {
                     <div className="chat-sidebar-header">
                         <div className="search-bar" style={{ width: '100%', background: 'white' }}>
                             <Search size={16} color="var(--text-muted)" />
-                            <input type="text" placeholder="Search chats..." style={{ fontSize: '0.9rem' }} />
+                            <input
+                                type="text"
+                                placeholder="Search chats..."
+                                style={{ fontSize: '0.9rem' }}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
                             {['all', 'personal', 'group'].map(f => (
@@ -126,11 +133,16 @@ export default function ChatView({ onUnreadChange }) {
                     </div>
                     <div className="contact-list">
                         {chats.length === 0 && <p style={{ padding: '20px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>No chats yet.</p>}
-                        {chats.map(chat => {
-                            const name = chatName(chat);
-                            const isGroup = chat.type !== 'personal';
-                            return (
-                                <div key={chat._id} className={`contact-item ${activeChatId === chat._id ? 'active' : ''}`} onClick={() => setActiveChatId(chat._id)}>
+                        {chats.length > 0 && chats.filter(chat => chatName(chat).toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                            <p style={{ padding: '20px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>No chats match your search.</p>
+                        )}
+                        {chats
+                            .filter(chat => chatName(chat).toLowerCase().includes(searchTerm.toLowerCase()))
+                            .map(chat => {
+                                const name = chatName(chat);
+                                const isGroup = chat.type !== 'personal';
+                                return (
+                                    <div key={chat._id} className={`contact-item ${activeChatId === chat._id ? 'active' : ''}`} onClick={() => setActiveChatId(chat._id)}>
                                     <div className="user-avatar" style={{ background: isGroup ? 'var(--accent-light)' : 'var(--primary-light)', color: isGroup ? 'var(--accent)' : 'var(--primary)' }}>
                                         {isGroup ? <Compass size={20} /> : name.charAt(0)}
                                     </div>
@@ -164,7 +176,7 @@ export default function ChatView({ onUnreadChange }) {
                                         <span style={{ fontSize: '0.8rem', color: 'var(--secondary)' }}>{activeChat?.participants?.length || 2} members</span>
                                     </div>
                                 </div>
-                                <button className="icon-btn"><MoreVertical size={20} /></button>
+                                <button className="icon-btn" aria-label="Chat options"><MoreVertical size={20} /></button>
                             </div>
                             <div className="chat-messages">
                                 {messages.map((msg, i) => {
@@ -181,10 +193,10 @@ export default function ChatView({ onUnreadChange }) {
                                 <div ref={bottomRef} />
                             </div>
                             <div className="chat-input-area">
-                                <button className="icon-btn" style={{ padding: '0 8px' }}><Plus size={24} /></button>
+                                <button className="icon-btn" style={{ padding: '0 8px' }} aria-label="Attach file"><Plus size={24} /></button>
                                 <input type="text" placeholder="Type a message..."
-                                    value={msgText} onChange={e => setMsgText(e.target.value)} onKeyDown={handleKeyDown} />
-                                <button className="send-btn" onClick={handleSend}><Send size={18} style={{ marginLeft: '-2px' }} /></button>
+                                    value={msgText} onChange={e => setMsgText(e.target.value)} onKeyDown={handleKeyDown} aria-label="Type a message" />
+                                <button className="send-btn" onClick={handleSend} aria-label="Send message"><Send size={18} style={{ marginLeft: '-2px' }} /></button>
                             </div>
                         </>
                     ) : (
