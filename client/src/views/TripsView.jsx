@@ -14,7 +14,7 @@ function TripCard({ trip, currentUserId }) {
             <img src={trip.image || defaultImg} alt={trip.fromLocation} className="card-img" />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                 <span className="status-badge status-upcoming">{trip.status}</span>
-                <button className="icon-btn" style={{ padding: 0 }}><MoreVertical size={18} /></button>
+                <button className="icon-btn" style={{ padding: 0 }} aria-label="Trip options"><MoreVertical size={18} /></button>
             </div>
             <h3 style={{ marginTop: '8px' }}>{trip.fromLocation} → {trip.toLocation}</h3>
             <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>{trip.description}</p>

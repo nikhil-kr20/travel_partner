@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Compass } from 'lucide-react';
+import { Compass, Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -7,6 +7,7 @@ export default function LoginView() {
     const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [role, setRole] = useState('user');
     const [loading, setLoading] = useState(false);
@@ -47,8 +48,37 @@ export default function LoginView() {
                     </div>
                     <div className="form-group">
                         <label>Password</label>
-                        <input type="password" className="form-control" required placeholder="••••••••"
-                            value={password} onChange={e => setPassword(e.target.value)} />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                className="form-control"
+                                required
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                style={{ paddingRight: '44px' }}
+                            />
+                            <button
+                                type="button"
+                                className="icon-btn"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: 'absolute',
+                                    right: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer'
+                                }}
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" className="btn btn-primary"
                         style={{ width: '100%', justifyContent: 'center', marginTop: '12px' }}

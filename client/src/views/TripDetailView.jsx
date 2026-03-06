@@ -273,6 +273,7 @@ export default function TripDetailView() {
                                 style={{ padding: '2px 6px', flexShrink: 0 }}
                                 onClick={handleCopyLink}
                                 title="Copy link"
+                                aria-label="Copy group chat link"
                             >
                                 {copied ? <CheckCheck size={16} color="var(--secondary, #10b981)" /> : <Copy size={16} />}
                             </button>

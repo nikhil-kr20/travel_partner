@@ -13,7 +13,7 @@ function TripCard({ trip }) {
             <img src={trip.image || defaultImg} alt={trip.title || trip.fromLocation} className="card-img" />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                 <span className="status-badge status-upcoming">{trip.status || 'open'}</span>
-                <button className="icon-btn" style={{ padding: 0 }}><MoreVertical size={18} /></button>
+                <button className="icon-btn" style={{ padding: 0 }} aria-label="Trip options"><MoreVertical size={18} /></button>
             </div>
             <h3 style={{ marginTop: '8px' }}>{trip.title || `${trip.fromLocation} → ${trip.toLocation}`}</h3>
             <div className="meta-info">
@@ -48,7 +48,7 @@ function RideCard({ ride }) {
                     {ride.rating && <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#eab308' }}><Star size={14} fill="currentColor" /> {ride.rating}</span>}
                 </div>
             </div>
-            <button className="icon-btn" style={{ background: 'var(--bg-main)', width: '40px', height: '40px', borderRadius: '50%' }}>
+            <button className="icon-btn" style={{ background: 'var(--bg-main)', width: '40px', height: '40px', borderRadius: '50%' }} aria-label="View ride details">
                 <ChevronRight size={20} />
             </button>
         </div>
