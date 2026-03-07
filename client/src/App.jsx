@@ -94,31 +94,32 @@ function Shell({ children, noPadding = false }) {
 
   return (
     <div className="app-layout">
-      <NavBar
-        items={[
-          { name: 'Dashboard', url: '/dashboard', icon: Home },
-          ...(isRider ? [] : [{ name: 'Trips', url: '/trips', icon: MapPin }]),
-          { name: isRider ? 'My Rides' : 'Book Ride', url: '/rides', icon: Car },
-          { name: 'Messages', url: '/chat', icon: MessageSquare },
-          { name: 'Profile', url: '/profile', icon: User }
-        ]}
-      />
-
       {/* ── Main ────────────────────────────────── */}
       <main className="main-content">
         {/* Top Header */}
         <header className="top-header">
-          {/* Search */}
-          <div className="search-bar">
-            <Search size={16} color="var(--text-faint)" />
-            <input placeholder="Search trips, rides, people..." aria-label="Search" />
+          {/* Logo */}
+          <div className="logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="logo-icon" style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+              <Compass size={18} />
+            </div>
+            <span className="logo-text" style={{ fontSize: '1.1rem', fontWeight: 800, letterSpacing: '-0.02em', background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              TravelPartner
+            </span>
           </div>
+
+          <NavBar
+            items={[
+              { name: 'Dashboard', url: '/dashboard', icon: Home },
+              ...(isRider ? [] : [{ name: 'Trips', url: '/trips', icon: MapPin }]),
+              { name: isRider ? 'My Rides' : 'Book Ride', url: '/rides', icon: Car },
+              { name: 'Messages', url: '/chat', icon: MessageSquare },
+              { name: 'Profile', url: '/profile', icon: User }
+            ]}
+          />
 
           {/* Actions */}
           <div className="header-actions">
-            <button className="icon-btn" aria-label="Notifications">
-              <Bell size={18} />
-            </button>
             <div
               className="user-avatar"
               onClick={() => navigate('/profile')}

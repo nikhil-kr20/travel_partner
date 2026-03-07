@@ -367,7 +367,6 @@ export const globalStyles = `
     flex-direction: column;
     height: 100vh;
     overflow-y: auto;
-    margin-left: 260px;
     background: var(--bg-main);
   }
 

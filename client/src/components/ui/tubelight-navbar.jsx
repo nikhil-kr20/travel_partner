@@ -21,18 +21,7 @@ export function NavBar({ items, className }) {
         <div className={cn("tubelight-nav-wrapper", className)}>
             <style>{`
         .tubelight-nav-wrapper {
-           position: fixed;
-           bottom: 1.5rem;
-           left: 50%;
-           transform: translateX(-50%);
            z-index: 50;
-        }
-        @media (min-width: 640px) {
-           .tubelight-nav-wrapper {
-               bottom: auto;
-               top: 0;
-               padding-top: 1.5rem;
-           }
         }
         
         .tubelight-pill-container {
