@@ -149,6 +149,8 @@ export const globalStyles = `
     font-weight: 800;
     letter-spacing: -0.02em;
     text-decoration: none;
+    padding-top: 5px;
+    padding-bottom: 5px;
   }
 
   .logo-icon {
