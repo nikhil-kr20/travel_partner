@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-r
 import { Home, Car, MessageSquare, User, MapPin, Compass, Bell, Search, Zap } from 'lucide-react';
 import { useAuth } from './context/AuthContext.jsx';
 import { globalStyles } from './styles/globalStyles.js';
+import { NavBar } from './components/ui/tubelight-navbar.jsx';
 
 import LoginView from './views/LoginView.jsx';
 import SignupView from './views/SignupView.jsx';
@@ -93,44 +94,15 @@ function Shell({ children, noPadding = false }) {
 
   return (
     <div className="app-layout">
-      {/* ── Sidebar ─────────────────────────────── */}
-      <aside className="sidebar">
-        <div className="sidebar-top">
-          <div className="logo-icon">
-            <Compass size={18} />
-          </div>
-          <span className="logo-text" style={{ fontSize: '1.1rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-            TravelPartner
-          </span>
-        </div>
-
-        <nav className="nav-menu">
-          <NavItem icon={<Home size={19} />} label="Dashboard" to="/dashboard" />
-          {!isRider && (
-            <NavItem icon={<MapPin size={19} />} label="Trips" to="/trips" />
-          )}
-          <NavItem icon={<Car size={19} />} label={isRider ? 'My Rides' : 'Book Ride'} to="/rides" />
-          <NavItem
-            icon={<MessageSquare size={19} />}
-            label="Messages"
-            to="/chat"
-            badge={unreadCount || null}
-          />
-          <div className="nav-divider" />
-          <NavItem icon={<User size={19} />} label="Profile" to="/profile" />
-        </nav>
-
-        <div className="sidebar-pro-card">
-          <h4>✦ Pro Plan</h4>
-          <p>Unlock unlimited trips, priority rides & more.</p>
-          <button
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '8px 14px', fontSize: '0.8rem' }}
-          >
-            <Zap size={14} /> Upgrade Now
-          </button>
-        </div>
-      </aside>
+      <NavBar
+        items={[
+          { name: 'Dashboard', url: '/dashboard', icon: Home },
+          ...(isRider ? [] : [{ name: 'Trips', url: '/trips', icon: MapPin }]),
+          { name: isRider ? 'My Rides' : 'Book Ride', url: '/rides', icon: Car },
+          { name: 'Messages', url: '/chat', icon: MessageSquare },
+          { name: 'Profile', url: '/profile', icon: User }
+        ]}
+      />
 
       {/* ── Main ────────────────────────────────── */}
       <main className="main-content">
