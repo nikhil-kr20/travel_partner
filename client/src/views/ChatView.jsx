@@ -122,7 +122,7 @@ export default function ChatView({ onUnreadChange, onChatOpen }) {
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* Header bar */}
-            <div style={{
+            <div className={`chat-header-bar ${activeChatId ? 'mobile-hidden' : ''}`} style={{
                 padding: '16px 32px 12px',
                 borderBottom: '1px solid rgba(255,255,255,0.06)',
                 display: 'flex',

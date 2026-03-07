@@ -1211,6 +1211,10 @@ export const globalStyles = `
     .chat-sidebar.mobile-hidden {
       display: none;
     }
+    
+    .chat-header-bar.mobile-hidden {
+      display: none !important;
+    }
 
     .chat-main { 
       flex: 1; 
