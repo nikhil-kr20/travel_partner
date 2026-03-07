@@ -242,9 +242,7 @@ export const globalStyles = `
   ═══════════════════════════════ */
   .top-header {
     height: 68px;
-    background: rgba(10,15,30,0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -253,6 +251,16 @@ export const globalStyles = `
     top: 0;
     z-index: 30;
     border-bottom: 1px solid var(--border);
+  }
+
+  .top-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(10,15,30,0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: -1;
   }
 
   .search-bar {
@@ -375,6 +383,15 @@ export const globalStyles = `
     max-width: 1280px;
     margin: 0 auto;
     width: 100%;
+  }
+
+  @media (max-width: 767px) {
+    .page-content {
+      padding: 16px 16px 90px;
+    }
+    .top-header {
+      padding: 0 16px;
+    }
   }
 
   /* ═══════════════════════════════
@@ -1149,7 +1166,7 @@ export const globalStyles = `
 
     .main-content {
       margin-left: 0;
-      height: calc(100vh - 62px);
+      height: 100vh;
     }
 
     .top-header {
@@ -1178,19 +1195,35 @@ export const globalStyles = `
     .hero p { font-size: 0.9rem; margin-bottom: 20px; }
 
     .chat-layout {
-      flex-direction: column;
-      height: calc(100vh - 60px - 62px);
+      height: calc(100vh - 60px);
+      position: relative;
     }
 
     .chat-sidebar {
       width: 100%;
-      height: 38%;
+      height: 100%;
       border-right: none;
-      border-bottom: 1px solid var(--border);
+      border-bottom: none;
       flex: none;
+      transition: transform 0.3s ease;
     }
 
-    .chat-main { flex: 1; }
+    .chat-sidebar.mobile-hidden {
+      display: none;
+    }
+
+    .chat-main { 
+      flex: 1; 
+      height: 100%;
+    }
+
+    .chat-main.mobile-hidden {
+      display: none;
+    }
+
+    .chat-back-btn {
+      display: flex !important;
+    }
 
     .message { max-width: 85%; }
 

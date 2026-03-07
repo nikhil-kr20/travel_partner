@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Search, Send, Plus, MoreVertical, Compass, MessageCircle } from 'lucide-react';
+import { Search, Send, Plus, MoreVertical, Compass, MessageCircle, ArrowLeft } from 'lucide-react';
 import { getChats, getMessages, markRead } from '../services/chat.service.js';
 import { getSocket } from '../lib/socket.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -16,7 +16,7 @@ function formatTime(ts) {
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
-export default function ChatView({ onUnreadChange }) {
+export default function ChatView({ onUnreadChange, onChatOpen }) {
     const { user } = useAuth();
     const location = useLocation();
     const [chats, setChats] = useState([]);
@@ -48,6 +48,12 @@ export default function ChatView({ onUnreadChange }) {
             .catch(() => setMessages([]));
         markRead(activeChatId).catch(() => { });
     }, [activeChatId]);
+
+    // Handle mobile chat open state for navigation bar hiding
+    useEffect(() => {
+        onChatOpen?.(!!activeChatId);
+        return () => onChatOpen?.(false);
+    }, [activeChatId, onChatOpen]);
 
     // Socket
     useEffect(() => {
@@ -140,7 +146,7 @@ export default function ChatView({ onUnreadChange }) {
 
             <div className="chat-layout">
                 {/* ── Sidebar ─────────────────────────── */}
-                <div className="chat-sidebar">
+                <div className={`chat-sidebar ${activeChatId ? 'mobile-hidden' : ''}`}>
                     <div className="chat-sidebar-header">
                         <div className="search-bar" style={{ width: '100%' }}>
                             <Search size={15} color="var(--text-faint)" />
@@ -253,12 +259,20 @@ export default function ChatView({ onUnreadChange }) {
                 </div>
 
                 {/* ── Chat Main ────────────────────────── */}
-                <div className="chat-main">
+                <div className={`chat-main ${!activeChatId ? 'mobile-hidden' : ''}`}>
                     {activeChatId ? (
                         <>
                             {/* Chat Header */}
                             <div className="chat-header">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <button
+                                        className="icon-btn chat-back-btn"
+                                        onClick={() => setActiveChatId(null)}
+                                        style={{ display: 'none', width: 32, height: 32, padding: 0, border: 'none', background: 'transparent' }}
+                                        aria-label="Back to chat list"
+                                    >
+                                        <ArrowLeft size={20} color="var(--text-muted)" />
+                                    </button>
                                     <div style={{
                                         width: 38,
                                         height: 38,

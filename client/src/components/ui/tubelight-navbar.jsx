@@ -23,10 +23,29 @@ export function NavBar({ items, className }) {
         .tubelight-nav-wrapper {
            z-index: 50;
         }
+        @media (max-width: 767px) {
+           .tubelight-nav-wrapper {
+               position: fixed;
+               bottom: 20px;
+               left: 50%;
+               transform: translateX(-50%);
+               width: auto;
+               max-width: 400px;
+               display: flex;
+               justify-content: center;
+               background: transparent;
+               border-top: none;
+           }
+           .tubelight-nav-wrapper.mobile-hidden {
+               display: none !important;
+           }
+        }
         
         .tubelight-pill-container {
            display: flex;
            align-items: center;
+           justify-content: center;
+           width: auto;
            gap: 12px;
            background: rgba(10, 15, 30, 0.4);
            border: 1px solid rgba(255, 255, 255, 0.1);
@@ -50,11 +69,6 @@ export function NavBar({ items, className }) {
            display: flex;
            align-items: center;
            justify-content: center;
-        }
-        @media (max-width: 767px) {
-           .tubelight-item {
-               padding: 10px 16px;
-           }
         }
 
         .tubelight-item:hover {

@@ -87,6 +87,7 @@ function Shell({ children, noPadding = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   if (!user) return null;
   const isRider = user.role === 'rider';
@@ -109,6 +110,7 @@ function Shell({ children, noPadding = false }) {
           </div>
 
           <NavBar
+            className={isChatOpen ? 'mobile-hidden' : ''}
             items={[
               { name: 'Dashboard', url: '/dashboard', icon: Home },
               ...(isRider ? [] : [{ name: 'Trips', url: '/trips', icon: MapPin }]),
@@ -139,7 +141,7 @@ function Shell({ children, noPadding = false }) {
         {/* Page Content */}
         <div className={noPadding ? '' : 'page-content'}>
           {React.isValidElement(children)
-            ? React.cloneElement(children, { onUnreadChange: setUnreadCount })
+            ? React.cloneElement(children, { onUnreadChange: setUnreadCount, onChatOpen: setIsChatOpen })
             : children}
         </div>
       </main>
