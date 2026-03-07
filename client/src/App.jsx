@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-router-dom';
-import { Home, Car, MessageSquare, User, Search, Bell, Compass, MapPin } from 'lucide-react';
+import { Home, Car, MessageSquare, User, MapPin, Compass, Bell, Search, Zap } from 'lucide-react';
 import { useAuth } from './context/AuthContext.jsx';
 import { globalStyles } from './styles/globalStyles.js';
 
@@ -21,8 +21,24 @@ function Spinner() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="loader" />
+      <div style={{
+        display: 'flex',
+        height: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-main)',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <div style={{
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          border: '3px solid rgba(6,182,212,0.2)',
+          borderTop: '3px solid #06b6d4',
+          animation: 'spin 0.8s linear infinite'
+        }} />
+        <span style={{ color: '#64748b', fontSize: '0.875rem' }}>Loading...</span>
       </div>
     </>
   );
@@ -46,13 +62,13 @@ function GuestRoute({ children }) {
   return children;
 }
 
-// ─── Sidebar NavItem (uses Link) ─────────────────────────────
+// ─── NavItem ────────────────────────────────────────────────
 function NavItem({ icon, label, to, badge }) {
   const { pathname } = useLocation();
   const isActive = pathname === to || pathname.startsWith(to + '/');
   return (
-    <Link to={to} style={{ textDecoration: 'none' }}>
-      <div className={`nav-item ${isActive ? 'active' : ''}`}>
+    <Link to={to} style={{ textDecoration: 'none', display: 'flex', flex: 1 }}>
+      <div className={`nav-item ${isActive ? 'active' : ''}`} style={{ flex: 1 }}>
         {icon}
         <span style={{ flex: 1 }}>{label}</span>
         {badge && (
@@ -65,7 +81,7 @@ function NavItem({ icon, label, to, badge }) {
   );
 }
 
-// ─── Shared Layout Shell ──────────────────────────────────────
+// ─── App Shell ────────────────────────────────────────────────
 function Shell({ children, noPadding = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -73,38 +89,82 @@ function Shell({ children, noPadding = false }) {
 
   if (!user) return null;
   const isRider = user.role === 'rider';
+  const initials = user?.name?.charAt(0).toUpperCase() || 'U';
 
   return (
     <div className="app-layout">
-      {/* Sidebar */}
+      {/* ── Sidebar ─────────────────────────────── */}
       <aside className="sidebar">
+        <div className="sidebar-top">
+          <div className="logo-icon">
+            <Compass size={18} />
+          </div>
+          <span className="logo-text" style={{ fontSize: '1.1rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+            TravelPartner
+          </span>
+        </div>
+
         <nav className="nav-menu">
-          <NavItem icon={<Home size={20} />} label="Dashboard" to="/dashboard" />
+          <NavItem icon={<Home size={19} />} label="Dashboard" to="/dashboard" />
           {!isRider && (
-            <NavItem icon={<MapPin size={20} />} label="Trips" to="/trips" />
+            <NavItem icon={<MapPin size={19} />} label="Trips" to="/trips" />
           )}
-          <NavItem icon={<Car size={20} />} label={isRider ? 'My Rides' : 'Book Ride'} to="/rides" />
-          <NavItem icon={<MessageSquare size={20} />} label="Messages" to="/chat" badge={unreadCount || null} />
-          <div style={{ margin: '20px 0', borderBottom: '1px solid var(--border)' }} />
-          <NavItem icon={<User size={20} />} label="Profile" to="/profile" />
+          <NavItem icon={<Car size={19} />} label={isRider ? 'My Rides' : 'Book Ride'} to="/rides" />
+          <NavItem
+            icon={<MessageSquare size={19} />}
+            label="Messages"
+            to="/chat"
+            badge={unreadCount || null}
+          />
+          <div className="nav-divider" />
+          <NavItem icon={<User size={19} />} label="Profile" to="/profile" />
         </nav>
 
-        <div style={{ marginTop: 'auto', padding: '20px 0' }}>
-          <div className="card" style={{ padding: '16px', background: 'var(--primary-light)', borderColor: 'var(--primary-light)' }}>
-            <h4 style={{ color: 'var(--primary)', marginBottom: '8px' }}>Pro Plan</h4>
-            <p className="text-sm" style={{ marginBottom: '12px' }}>Unlock all companion features.</p>
-            <button className="btn btn-primary" style={{ width: '100%', padding: '8px', fontSize: '0.85rem' }}>
-              Upgrade
-            </button>
-          </div>
+        <div className="sidebar-pro-card">
+          <h4>✦ Pro Plan</h4>
+          <p>Unlock unlimited trips, priority rides & more.</p>
+          <button
+            className="btn btn-primary"
+            style={{ width: '100%', padding: '8px 14px', fontSize: '0.8rem' }}
+          >
+            <Zap size={14} /> Upgrade Now
+          </button>
         </div>
       </aside>
 
-      {/* Main */}
+      {/* ── Main ────────────────────────────────── */}
       <main className="main-content">
-        {/* Page content */}
+        {/* Top Header */}
+        <header className="top-header">
+          {/* Search */}
+          <div className="search-bar">
+            <Search size={16} color="var(--text-faint)" />
+            <input placeholder="Search trips, rides, people..." aria-label="Search" />
+          </div>
+
+          {/* Actions */}
+          <div className="header-actions">
+            <button className="icon-btn" aria-label="Notifications">
+              <Bell size={18} />
+            </button>
+            <div
+              className="user-avatar"
+              onClick={() => navigate('/profile')}
+              title="Go to profile"
+              role="button"
+              aria-label="Go to profile"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && navigate('/profile')}
+            >
+              {user?.profileImage?.url
+                ? <img src={user.profileImage.url} alt={user?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : initials}
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
         <div className={noPadding ? '' : 'page-content'}>
-          {/* Pass unread setter to ChatView via context-like prop */}
           {React.isValidElement(children)
             ? React.cloneElement(children, { onUnreadChange: setUnreadCount })
             : children}
@@ -131,32 +191,17 @@ function RidesPage() {
 
 // ─── App ──────────────────────────────────────────────────────
 export default function App() {
-  const { logout, user } = useAuth();
-  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
-      <header className="top-header" style={{ background: 'rgba(255, 255, 255, 0.7)', borderBottom: '1px solid rgba(0, 0, 0, 0.05)', backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)' }}>
-        <div className="logo" style={{ marginBottom: 0, padding: 0 }}>
-          <div className="logo-icon"><Compass size={24} /></div>
-          TravelPartner
-        </div>
-        <div className="header-actions">
-          <div className="user-avatar" onClick={() => navigate('/profile')} title="Profile" aria-label="Go to profile">
-            {user?.profileImage?.url
-              ? <img src={user.profileImage.url} alt={user?.name}
-                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-              : user?.name?.charAt(0).toUpperCase() || 'U'}
-          </div>
-        </div>
-      </header>
       <Routes>
-        {/* ── Guest routes ────────────────────────────── */}
+        {/* Guest routes */}
         <Route path="/login" element={<GuestRoute><LoginView /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><SignupView /></GuestRoute>} />
 
-        {/* ── Protected routes (inside shell) ─────────── */}
+        {/* Protected routes */}
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Shell><DashboardPage /></Shell>
@@ -199,7 +244,7 @@ export default function App() {
           </ProtectedRoute>
         } />
 
-        {/* ── Fallback ─────────────────────────────────── */}
+        {/* Fallback */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
